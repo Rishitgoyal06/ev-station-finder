@@ -6,7 +6,6 @@ import { PointerHighlight } from "./ui/pointer-highlight";
 export function HeroSection() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Enhanced Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-black to-gray-950" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-transparent to-transparent" />
       <div className="absolute inset-0 bg-black/30" />

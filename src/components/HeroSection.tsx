@@ -10,16 +10,9 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-transparent to-transparent" />
       <div className="absolute inset-0 bg-black/30" />
       <BackgroundBeams />
-      
-      {/* Hero Content */}
+    
       <div className="relative z-20 text-center px-6 max-w-7xl mx-auto">
-        {/* Enhanced Badge */}
-        <div className="mb-8">
-          <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-400/40 rounded-full text-sm font-semibold text-green-300 backdrop-blur-md shadow-lg hover:shadow-green-400/20 transition-all duration-300">
-            <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-            ⚡ India's #1 EV Charging Network
-          </span>
-        </div>
+  
         
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white font-sans tracking-tight mb-8 leading-tight">
           Find Your Next{" "}
@@ -33,18 +26,15 @@ export function HeroSection() {
               </span>
             </PointerHighlight>
           </div>
-          <br />
-          <span className="text-3xl md:text-5xl lg:text-6xl font-light text-gray-100">with Charge IQ</span>
         </h1>
         
         <p className="text-lg md:text-xl lg:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-          Discover <span className="text-green-400 font-semibold hover:text-green-300 transition-colors">5000+ charging stations</span> across India with real-time availability, 
-          smart routing, and seamless payment integration. 
-          <br className="hidden md:block" />
-          Join <span className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">50K+ happy EV owners</span> today.
+          Discover India's largest EV charging network with{" "}
+          <span className="text-green-400 font-semibold hover:text-green-300 transition-colors">real-time availability</span> and{" "}
+          <span className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">intelligent routing</span>{" "}
+          to power your journey.
         </p>
         
-        {/* Enhanced Stats */}
         <div className="flex flex-wrap justify-center gap-8 mb-12">
           <div className="text-center group cursor-pointer">
             <div className="text-2xl md:text-3xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">5000+</div>
@@ -60,7 +50,6 @@ export function HeroSection() {
           </div>
         </div>
         
-        {/* Enhanced Buttons */}
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <button className="group px-12 py-5 bg-gradient-to-r from-green-400 via-emerald-500 to-cyan-400 text-black font-bold rounded-full hover:shadow-2xl hover:shadow-green-400/40 transition-all duration-300 transform hover:scale-105 text-lg relative overflow-hidden border border-green-300/20">
             <span className="relative z-10 flex items-center gap-2">

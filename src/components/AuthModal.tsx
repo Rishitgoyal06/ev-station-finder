@@ -1,24 +1,36 @@
 "use client";
-import { LoginForm } from "./login-form";
 import { useState, useEffect } from "react";
+import { LoginForm } from "./login-form";
+import { SignupForm } from "./signup-form";
 
-interface LoginModalProps {
+interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSignupClick?: () => void;
+  initialMode?: "login" | "signup";
 }
 
-export function LoginModal({ isOpen, onClose, onSignupClick }: LoginModalProps) {
+export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      setMode(initialMode);
     } else {
       const timer = setTimeout(() => setIsVisible(false), 300);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, initialMode]);
+
+  const handleFlip = () => {
+    setIsFlipping(true);
+    setTimeout(() => {
+      setMode(mode === "login" ? "signup" : "login");
+      setIsFlipping(false);
+    }, 300);
+  };
 
   if (!isVisible) return null;
 
@@ -43,8 +55,17 @@ export function LoginModal({ isOpen, onClose, onSignupClick }: LoginModalProps) 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <LoginForm onSignupClick={onSignupClick} />
+        
+        <div className={`transition-all duration-500 ${isFlipping ? 'opacity-50' : 'opacity-100'}`}>
+          {mode === "login" ? (
+            <LoginForm onSignupClick={handleFlip} />
+          ) : (
+            <SignupForm onLoginClick={handleFlip} />
+          )}
+        </div>
       </div>
+      
+
     </div>
   );
 }

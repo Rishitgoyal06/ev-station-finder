@@ -11,13 +11,12 @@ import {
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
 import { useState } from "react";
-import { SignupModal } from "./SignupModal";
-import { LoginModal } from "./LoginModal";
+import { AuthModal } from "./AuthModal";
  
 export function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
   const navItems = [
     { name: "Home", link: "/" },
@@ -37,13 +36,19 @@ export function NavBar() {
             <div className="flex items-center gap-4">
               <NavbarButton 
                 variant="secondary"
-                onClick={() => setIsLoginModalOpen(true)}
+                onClick={() => {
+                  setAuthMode("login");
+                  setIsAuthModalOpen(true);
+                }}
               >
                 Login
               </NavbarButton>
               <NavbarButton 
                 variant="primary"
-                onClick={() => setIsSignupModalOpen(true)}
+                onClick={() => {
+                  setAuthMode("signup");
+                  setIsAuthModalOpen(true);
+                }}
               >
                 Sign Up
               </NavbarButton>
@@ -76,7 +81,8 @@ export function NavBar() {
               <div className="flex w-full flex-col gap-3 mt-6">
                 <NavbarButton
                   onClick={() => {
-                    setIsLoginModalOpen(true);
+                    setAuthMode("login");
+                    setIsAuthModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
                   variant="secondary"
@@ -86,7 +92,8 @@ export function NavBar() {
                 </NavbarButton>
                 <NavbarButton
                   onClick={() => {
-                    setIsSignupModalOpen(true);
+                    setAuthMode("signup");
+                    setIsAuthModalOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full py-3 text-lg font-medium bg-green-500 hover:bg-green-600 text-white border-none"
@@ -99,14 +106,10 @@ export function NavBar() {
         </Navbar>
       </div>
       
-      <SignupModal 
-        isOpen={isSignupModalOpen} 
-        onClose={() => setIsSignupModalOpen(false)} 
-      />
-      
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
       />
     </>
   );

@@ -1,3 +1,4 @@
+"use client";
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,8 +15,11 @@ import signupAnimation from "@/components/assets/Sign up.json"
 
 export function SignupForm({
   className,
+  onLoginClick,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & {
+  onLoginClick?: () => void;
+}) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0 bg-black/90 backdrop-blur-md border border-green-500/30">
@@ -108,7 +112,7 @@ export function SignupForm({
                 </Button>
               </Field>
               <FieldDescription className="text-center text-gray-400">
-                Already have an account? <a href="#" className="text-green-500 hover:text-green-400">Sign in</a>
+                Already have an account? <button type="button" onClick={onLoginClick} className="text-green-500 hover:text-green-400 underline-offset-4 hover:underline bg-transparent border-none p-0 cursor-pointer transition-colors duration-200">Sign in</button>
               </FieldDescription>
             </FieldGroup>
           </form>

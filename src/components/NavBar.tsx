@@ -20,8 +20,8 @@ export function NavBar() {
 
   const navItems = [
     { name: "Home", link: "/" },
-    { name: "Features", link: "#features" },
     { name: "About Us", link: "#about" },
+    { name: "Features", link: "#features" },
     { name: "Services", link: "#services" },
     { name: "Contact Us", link: "#contact" },
   ];

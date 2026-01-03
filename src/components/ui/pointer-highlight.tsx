@@ -67,6 +67,7 @@ export function PointerHighlight({
               width: dimensions.width,
               height: dimensions.height,
             }}
+            viewport={{ once: true }}
             transition={{
               duration: 1,
               ease: "easeInOut",
@@ -80,6 +81,7 @@ export function PointerHighlight({
               x: dimensions.width + 4,
               y: dimensions.height + 4,
             }}
+            viewport={{ once: true }}
             style={{
               rotate: -90,
             }}

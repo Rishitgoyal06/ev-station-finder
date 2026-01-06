@@ -55,7 +55,7 @@ export function HeroSection() {
         
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
           <button 
-            onClick={() => window.open('http://localhost:8000', '_blank')}
+            onClick={() => window.location.href = 'http://localhost:8000'}
             className="group px-12 py-5 bg-gradient-to-r from-green-400 via-emerald-500 to-cyan-400 text-black font-bold rounded-full hover:shadow-2xl hover:shadow-green-400/40 transition-all duration-300 transform hover:scale-105 text-lg relative overflow-hidden border border-green-300/20"
           >
             <span className="relative z-10 flex items-center gap-2">

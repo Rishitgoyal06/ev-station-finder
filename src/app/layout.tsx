@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EV Station Finder - Find Your Next Charge | India's Largest EV Network",
+  title: "Charge IQ - India's Largest EV Charging Network",
   description: "Discover India's largest EV charging network with real-time availability, intelligent routing, and 5000+ charging stations. Power your electric vehicle journey with confidence.",
   keywords: "EV charging, electric vehicle, charging stations, India, real-time availability, EV network, electric car charging",
   authors: [{ name: "EV Station Finder Team" }],
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "EV Station Finder - Find Your Next Charge",
+    title: "Charge IQ - India's Largest EV Charging Network",
     description: "Discover India's largest EV charging network with real-time availability and intelligent routing.",
   },
 };

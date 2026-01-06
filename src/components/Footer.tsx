@@ -3,8 +3,8 @@ import { Zap, Mail, Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-black via-gray-950 to-emerald-950 text-white py-12 border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-4">
+    <footer className="bg-black text-white py-12 border-t border-gray-800">
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center mb-4">
@@ -55,7 +55,7 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-white/10 mt-8 pt-8 text-center text-gray-300">
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-300">
           <p>&copy; 2026 Charge IQ. All rights reserved.</p>
         </div>
       </div>

@@ -1,0 +1,8 @@
+flask-sqlalchemy
+flask-login
+requests
+gunicorn
+psycopg2-binary
+flask
+groq
+python-dotenv

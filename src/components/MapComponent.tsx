@@ -46,6 +46,12 @@ export default function MapComponent() {
       zoom: 5,
       zoomControl: false,
       attributionControl: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      touchZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      dragging: false,
     });
 
     mapInstanceRef.current = map;

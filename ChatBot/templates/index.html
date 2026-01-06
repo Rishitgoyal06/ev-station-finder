@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Google Fonts for premium feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>EV Assistant 🔋</h2>
+            <p>Your Electric Vehicle Expert</p>
+            <div class="language-selector">
+                <select id="languageSelect" class="lang-dropdown">
+                    <option value="en">English</option>
+                    <option value="hinglish">Hinglish (Hindi + English)</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="ur">اردو (Urdu)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                    <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="as">অসমীয়া (Assamese)</option>
+                    <option value="mai">मैथिली (Maithili)</option>
+                    <option value="mag">मगही (Magahi)</option>
+                    <option value="bho">भोजपुरी (Bhojpuri)</option>
+                    <option value="new">नेपाली (Nepali)</option>
+                    <option value="gom">कोंकणी (Konkani)</option>
+                    <option value="sd">سنڌي (Sindhi)</option>
+                    <option value="doi">डोगरी (Dogri)</option>
+                    <option value="ks">कॉशुर (Kashmiri)</option>
+                    <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+                    <option value="mni">মৈতৈলোন্ (Manipuri)</option>
+                    <option value="bpy">বিষ্ণুপ্রিয়া (Bishnupriya)</option>
+                    <option value="raj">राजस्थानी (Rajasthani)</option>
+                    <option value="hne">छत्तीसगढ़ी (Chhattisgarhi)</option>
+                    <option value="mag">मगही (Magahi)</option>
+                    <option value="awa">अवधी (Awadhi)</option>
+                    <option value="braj">ब्रज (Braj)</option>
+                    <option value="har">हरियाणवी (Haryanvi)</option>
+                    <option value="kha">খাসি (Khasi)</option>
+                    <option value="lus">Mizo ṭawng (Mizo)</option>
+                    <option value="grt">गढ़वाली (Garhwali)</option>
+                    <option value="kum">कुमाऊँनी (Kumaoni)</option>
+                    <option value="bft">बल्ती (Balti)</option>
+                    <option value="dv">ދިވެހި (Dhivehi)</option>
+                    <option value="bo">བོད་སྐད (Tibetan)</option>
+                    <option value="lep">ᰛᰩᰵ (Lepcha)</option>
+                    <option value="kok">कोंकणी (Konkani)</option>
+                    <option value="tcy">ತುಳು (Tulu)</option>
+                    <option value="bpy">বিষ্ণুপ্রিয়া (Bishnupriya)</option>
+                    <option value="hoc">हो (Ho)</option>
+                    <option value="kru">कुरुख (Kurukh)</option>
+                    <option value="mnr">मुंडारी (Mundari)</option>
+                    <option value="unr">मुंडारी (Mundari)</option>
+                    <option value="gbm">गारो (Garo)</option>
+                    <option value="rkt">रंगपुरी (Rangpuri)</option>
+                    <option value="sck">सादरी (Sadri)</option>
+                    <option value="wtm">मेइतेइ (Meitei)</option>
+                    <option value="lmn">लम्बाडी (Lambadi)</option>
+                    <option value="kfr">कछारी (Kachari)</option>
+                    <option value="mjz">माजही (Majhi)</option>
+                    <option value="xnr">कांगड़ी (Kangri)</option>
+                    <option value="bhb">भीली (Bhili)</option>
+                    <option value="kfs">बिलासपुरी (Bilaspuri)</option>
+                    <option value="cdz">चम्बेआली (Chambeali)</option>
+                </select>
+            </div>
+        </div>
+        <div class="chat-box" id="chat-box">
+            <!-- Messages will appear here -->
+            <div class="message bot-message">
+                <div class="content">Hello! I'm your EV Assistant. How can I help you with electric vehicles today? ⚡</div>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+            <button id="send-btn" onclick="sendMessage()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

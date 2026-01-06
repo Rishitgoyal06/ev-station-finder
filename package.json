@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "chatbot": "./start-chatbot.sh",
-    "dev:full": "concurrently \"npm run dev\" \"npm run chatbot\""
+    "ev-backend": "./start-ev-backend.sh",
+    "dev:full": "concurrently \"npm run dev\" \"npm run chatbot\"",
+    "dev:complete": "concurrently \"npm run dev\" \"npm run chatbot\" \"npm run ev-backend\""
   },
   "dependencies": {
     "@tabler/icons-react": "^3.36.0",

@@ -54,7 +54,10 @@ export function HeroSection() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <button className="group px-12 py-5 bg-gradient-to-r from-green-400 via-emerald-500 to-cyan-400 text-black font-bold rounded-full hover:shadow-2xl hover:shadow-green-400/40 transition-all duration-300 transform hover:scale-105 text-lg relative overflow-hidden border border-green-300/20">
+          <button 
+            onClick={() => window.open('http://localhost:8000', '_blank')}
+            className="group px-12 py-5 bg-gradient-to-r from-green-400 via-emerald-500 to-cyan-400 text-black font-bold rounded-full hover:shadow-2xl hover:shadow-green-400/40 transition-all duration-300 transform hover:scale-105 text-lg relative overflow-hidden border border-green-300/20"
+          >
             <span className="relative z-10 flex items-center gap-2">
               Find Charging Stations
               <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

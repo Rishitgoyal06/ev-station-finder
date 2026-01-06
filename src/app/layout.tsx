@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "@/components/NavBar";
-import { ChatWidget } from "@/components/ChatWidget";
 import { AuthProvider } from "@/components/AuthContext";
 import { Footer } from "@/components/Footer";
 
@@ -49,7 +48,6 @@ export default function RootLayout({
         <AuthProvider>
           <NavBar />
           {children}
-          <ChatWidget />
         </AuthProvider>
         <Footer />
 

@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { HeroSection } from "@/components/HeroSection";
 import { LiveMap } from "@/components/LiveMap";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { FAQSection } from "@/components/FAQSection";
+import { StatsSection } from "@/components/StatsSection";
 import { Reviews } from "@/components/Reviews";
+import { PricingTeaser } from "@/components/PricingTeaser";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
@@ -22,9 +23,10 @@ export default function Home() {
       {!isLoading && (
         <>
           <HeroSection />
+          <StatsSection />
           <LiveMap />
+          <PricingTeaser />
           <Reviews />
-          <FAQSection />
         </>
       )}
     </>

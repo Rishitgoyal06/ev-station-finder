@@ -22,7 +22,6 @@ export function NavBar() {
     { name: "Home", link: "/" },
     { name: "About Us", link: "/about" },
     { name: "Features", link: "#features" },
-    { name: "Services", link: "#services" },
     { name: "Contact Us", link: "#contact" },
   ];
  

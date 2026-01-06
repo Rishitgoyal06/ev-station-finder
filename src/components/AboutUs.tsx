@@ -1,145 +1,107 @@
-"use client";
-import React from 'react';
-import { Zap, MapPin, Users, Shield } from 'lucide-react';
-import { LottieAnimation } from './ui/lottie-animation';
-
-export function AboutUs() {
-  const features = [
-    {
-      icon: <Zap className="w-8 h-8 text-green-400" />,
-      title: "Fast Charging",
-      description: "Quick and efficient charging solutions for all EV models"
-    },
-    {
-      icon: <MapPin className="w-8 h-8 text-green-400" />,
-      title: "Wide Network",
-      description: "Extensive charging network across major Indian cities"
-    },
-    {
-      icon: <Users className="w-8 h-8 text-green-400" />,
-      title: "Community Driven",
-      description: "Built by EV enthusiasts for the EV community"
-    },
-    {
-      icon: <Shield className="w-8 h-8 text-green-400" />,
-      title: "Reliable Service",
-      description: "24/7 support and maintenance for uninterrupted service"
-    }
-  ];
-
+export default function AboutSection() {
   return (
-    <section className="py-20 bg-gradient-to-b from-black via-emerald-950/30 to-black relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-900/15 via-lime-900/8 to-transparent" />
-      
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-            About <span className="text-green-400">CHARGEIQ</span>
-          </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-green-600 mx-auto mb-8" />
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            CHARGEIQ is a smart EV-tech startup redefining how electric vehicle owners find, access, and manage charging. 
-            Built for convenience and reliability, CHARGEIQ helps users locate the nearest EV charging stations, 
-            check real-time availability, book preferred time slots, and make advance payments — all through a seamless digital experience.
-          </p>
-        </div>
+    <>
+      <section className="w-full bg-gradient-to-br from-emerald-950 via-black to-gray-950 pt-32 pb-20 px-6 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-black/30" />
+        
+        <div className="relative z-10 max-w-6xl mx-auto bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
-        <div className="flex justify-center mb-16">
-          <LottieAnimation 
-            src="/animations/Business team.json"
-            className="w-full max-w-lg h-80"
-            fallback={<div className="w-full max-w-lg h-80 bg-emerald-400/10 rounded-xl animate-pulse" />}
-          />
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-16 items-center mb-20">
-          <div>
-            <div className="flex items-center mb-8">
-              <h3 className="text-3xl font-bold text-white">Our Mission</h3>
-            </div>
-            <p className="text-gray-300 text-lg leading-relaxed mb-6">
-              We understand that range anxiety and long waiting times are major challenges for EV adoption. 
-              CHARGEIQ solves this by bringing intelligent charging discovery and scheduling to your fingertips, 
-              eliminating uncertainty and saving valuable time.
-            </p>
-            <p className="text-gray-300 text-lg leading-relaxed mb-8">
-              Whether you're commuting daily or planning a long journey, CHARGEIQ ensures your charging experience 
-              is smooth, predictable, and stress-free.
-            </p>
-            <div className="bg-gray-900/50 border-l-4 border-green-400 p-6 rounded-r-lg">
-              <p className="text-gray-300 leading-relaxed">
-                Driven by innovation and sustainability, we are committed to accelerating India's electric mobility ecosystem. 
-                Our platform supports EV users, charging station operators, and partners with data-driven insights, 
-                automation, and scalable technology.
-              </p>
-            </div>
+          {/* Left Side – Animated Clip */}
+          <div className="w-full h-65 md:h-[360px] rounded-xl overflow-hidden bg-emerald-900/20 border border-emerald-400/30">
+            {/* Replace with your animation / lottie / video */}
+            <video
+              src="/ev-charging-animation.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
           </div>
-          
-          <div className="relative">
-            <LottieAnimation 
-              src="/animations/Electric vehicle charging animation.json"
-              className="w-full h-96"
-              fallback={<div className="w-full h-96 bg-emerald-400/10 rounded-xl animate-pulse" />}
+
+          {/* Right Side – About Content */}
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              About <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-cyan-300 bg-clip-text text-transparent">CHARGEIQ</span>
+            </h2>
+
+            <p className="text-gray-300 leading-relaxed mb-4">
+              <span className="font-semibold text-green-400">CHARGEIQ</span> is a smart
+              EV-tech startup redefining how electric vehicle owners find, access,
+              and manage charging. Built for convenience and reliability, our
+              platform enables users to locate nearby charging stations, check
+              real-time availability, book preferred time slots, and make advance
+              payments — all through a seamless digital experience.
+            </p>
+
+            <p className="text-gray-300 leading-relaxed mb-4">
+              We understand that <span className="font-semibold text-emerald-400">range anxiety</span>{" "}
+              and long waiting times are major barriers to EV adoption. CHARGEIQ
+              eliminates uncertainty by bringing intelligent charging discovery
+              and scheduling right to your fingertips — saving time and ensuring
+              stress-free journeys.
+            </p>
+
+            <p className="text-gray-300 leading-relaxed mb-6">
+              Driven by innovation and sustainability, we are committed to
+              accelerating India's electric mobility ecosystem. Our technology
+              supports EV users, charging station operators, and partners with
+              data-driven insights and automation.
+            </p>
+          </div>
+        </div>
+
+        {/* Scroll Down Arrow */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-50">
+          <a href="#vision-section" className="flex flex-col items-center text-green-400 hover:text-green-300 transition-colors group">
+            <span className="flex mb-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 384 512"
+                className="w-6 h-6 animate-bounce group-hover:animate-pulse"
+                fill="currentColor"
+              >
+                <path d="M374.6 310.6l-160 160c-28.4 28.4-74.5 28.4-102.9 0l-160-160c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L192 370.8 338.8 224c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25z" />
+              </svg>
+            </span>
+            <span className="text-sm font-medium">
+              Scroll<br />Down
+            </span>
+          </a>
+        </div>
+      </section>
+
+      {/* Vision Section */}
+      <section id="vision-section" className="w-full bg-gradient-to-br from-gray-950 via-emerald-950 to-black py-20 px-6 relative">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-900/20 via-transparent to-transparent" />
+        
+        <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* Left Side – Vision Content */}
+          <div className="bg-emerald-900/30 border-l-4 border-green-400 rounded-lg p-8 backdrop-blur-sm">
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              Our Vision
+            </h3>
+            <p className="text-green-400 font-semibold text-lg mb-4">
+              The Future Is Electric. The Future Is Now.
+            </p>
+            <p className="text-gray-300 leading-relaxed text-lg">
+              We envision an India where EV adoption is effortless, accessible,
+              and environmentally responsible — where charging is planned,
+              optimized, and intelligent.
+            </p>
+          </div>
+
+          {/* Right Side – Vision Image */}
+          <div className="w-full h-80 md:h-96 rounded-xl overflow-hidden bg-emerald-900/20 border border-emerald-400/30">
+            <img
+              src="/vision-image.jpg"
+              alt="Electric Vehicle Future Vision"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
-          {features.map((feature, index) => (
-            <div 
-              key={index}
-              className="bg-gray-900/50 border border-green-500/30 rounded-xl p-6 hover:border-green-400/50 transition-all duration-300 group"
-            >
-              <div className="mb-4 transform group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
-              <h4 className="text-white font-semibold mb-2">{feature.title}</h4>
-              <p className="text-gray-400 text-sm">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center mb-20">
-          <h3 className="text-4xl font-bold text-white mb-4">Our Vision</h3>
-          <div className="text-2xl font-semibold text-green-400 mb-8">The Future Is Electric. The Future Is Now.</div>
-          <div className="max-w-5xl mx-auto">
-            <p className="text-xl text-gray-300 leading-relaxed mb-6">
-              We envision an India where electric vehicle adoption is effortless, accessible, and environmentally responsible. 
-              A future where drivers never have to worry about finding a charger or waiting in long queues — 
-              because charging is planned, optimized, and intelligent.
-            </p>
-            <div className="bg-gradient-to-r from-green-900/30 to-green-700/20 border border-green-500/30 rounded-xl p-8">
-              <p className="text-lg text-gray-300 leading-relaxed">
-                At CHARGEIQ, everything we build — from our products to our partnerships — is focused on enabling 
-                a climate-conscious society without compromising on convenience, speed, or reliability. 
-                By combining technology, sustainability, and user-centric design, we aim to power the next generation 
-                of clean mobility in India.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-8">
-            <h3 className="text-3xl font-bold text-white">Why Choose CHARGEIQ?</h3>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gray-900/30 border border-green-500/20 rounded-xl p-8 group hover:border-green-400/40 transition-all duration-300">
-              <div className="text-4xl font-bold text-green-400 mb-2 group-hover:scale-110 transition-transform duration-300">10+</div>
-              <div className="text-white font-semibold mb-2">Cities Covered</div>
-              <div className="text-gray-400 text-sm">Major metropolitan areas across India</div>
-            </div>
-            <div className="bg-gray-900/30 border border-green-500/20 rounded-xl p-8 group hover:border-green-400/40 transition-all duration-300">
-              <div className="text-4xl font-bold text-green-400 mb-2 group-hover:scale-110 transition-transform duration-300">24/7</div>
-              <div className="text-white font-semibold mb-2">Support</div>
-              <div className="text-gray-400 text-sm">Round-the-clock assistance and monitoring</div>
-            </div>
-            <div className="bg-gray-900/30 border border-green-500/20 rounded-xl p-8 group hover:border-green-400/40 transition-all duration-300">
-              <div className="text-4xl font-bold text-green-400 mb-2 group-hover:scale-110 transition-transform duration-300">100%</div>
-              <div className="text-white font-semibold mb-2">Reliable</div>
-              <div className="text-gray-400 text-sm">Verified and maintained charging stations</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

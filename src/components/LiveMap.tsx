@@ -43,34 +43,26 @@ export function LiveMap() {
     <>
       <DynamicMap />
       <section className="py-20 bg-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-tl from-green-800/10 via-emerald-950/5 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/8 via-transparent to-transparent" />
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-green-800/3 to-transparent" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-emerald-600/5 via-green-700/3 to-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-br from-cyan-500/4 via-emerald-500/3 to-transparent rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}} />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid md:grid-cols-7 gap-20 items-center">
             <div className="text-left md:col-span-2 relative">
-              <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-green-400/25 via-emerald-500/15 to-transparent rounded-full" />
+              <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-green-400/40 via-green-500/25 to-green-600/15 rounded-full" />
               <div className="mb-6 relative">
                 <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight drop-shadow-2xl">
                   EV{" "}
-                  <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-cyan-300 bg-clip-text text-transparent animate-pulse">
+                  <span className="bg-gradient-to-r from-green-300 via-green-400 to-green-500 bg-clip-text text-transparent animate-pulse">
                     Charging
                   </span>
                 </h2>
                 <p className="text-2xl md:text-3xl lg:text-4xl text-green-300 font-semibold mb-4 drop-shadow-lg">
                   In 3 Simple Steps
                 </p>
-                <div className="w-20 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg shadow-green-400/25" />
+                <div className="w-20 h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full shadow-lg shadow-green-400/25" />
                 <div className="absolute -bottom-2 left-0 w-32 h-0.5 bg-gradient-to-r from-green-400/15 to-transparent rounded-full animate-pulse" />
               </div>
             </div>
             <div className="md:col-span-5 -mr-20 ml-12 relative group">
-              <div className="absolute -inset-4 bg-gradient-to-r from-green-400/8 via-emerald-500/8 to-cyan-400/8 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-all duration-700 animate-pulse" />
-              <div className="absolute -inset-2 bg-gradient-to-r from-green-400/12 via-emerald-500/12 to-cyan-400/12 rounded-xl blur-lg opacity-20 group-hover:opacity-35 transition-opacity duration-500" />
-              <div className="absolute top-4 right-4 w-4 h-4 bg-green-400 rounded-full animate-ping opacity-40" />
-              <div className="absolute bottom-4 left-4 w-2 h-2 bg-emerald-400 rounded-full animate-pulse opacity-60" />
+              <div className="absolute -inset-2 bg-green-400/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <Image
                 src="/Plug in your vehicle and start charging instantly with a smooth, reliable experience..png"
                 alt="EV Charging in 3 Simple Steps"

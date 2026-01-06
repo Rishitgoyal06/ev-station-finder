@@ -5,7 +5,6 @@ import 'leaflet/dist/leaflet.css';
 import { TypewriterEffectSmooth } from "./ui/typewriter-effect";
 
 const evStations = [
-  { id: 1, lat: 19.0760, lng: 72.8777, name: "Mumbai Central", status: "available" },
   { id: 2, lat: 28.6139, lng: 77.2090, name: "Delhi CP", status: "occupied" },
   { id: 3, lat: 12.9716, lng: 77.5946, name: "Bangalore Tech Park", status: "available" },
   { id: 4, lat: 22.5726, lng: 88.3639, name: "Kolkata Metro", status: "maintenance" },
@@ -13,7 +12,6 @@ const evStations = [
   { id: 6, lat: 23.0225, lng: 72.5714, name: "Ahmedabad Station", status: "occupied" },
   { id: 7, lat: 17.3850, lng: 78.4867, name: "Hyderabad Hub", status: "available" },
   { id: 8, lat: 13.0827, lng: 80.2707, name: "Chennai Marina", status: "available" },
-  { id: 9, lat: 18.5204, lng: 73.8567, name: "Pune IT Park", status: "occupied" },
   { id: 10, lat: 30.7333, lng: 76.7794, name: "Chandigarh Sector 17", status: "available" },
 ];
 

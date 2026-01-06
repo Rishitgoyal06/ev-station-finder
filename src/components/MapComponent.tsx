@@ -9,6 +9,12 @@ const evStations = [
   { id: 2, lat: 28.6139, lng: 77.2090, name: "Delhi CP", status: "occupied" },
   { id: 3, lat: 12.9716, lng: 77.5946, name: "Bangalore Tech Park", status: "available" },
   { id: 4, lat: 22.5726, lng: 88.3639, name: "Kolkata Metro", status: "maintenance" },
+  { id: 5, lat: 26.9124, lng: 75.7873, name: "Jaipur Mall", status: "available" },
+  { id: 6, lat: 23.0225, lng: 72.5714, name: "Ahmedabad Station", status: "occupied" },
+  { id: 7, lat: 17.3850, lng: 78.4867, name: "Hyderabad Hub", status: "available" },
+  { id: 8, lat: 13.0827, lng: 80.2707, name: "Chennai Marina", status: "available" },
+  { id: 9, lat: 18.5204, lng: 73.8567, name: "Pune IT Park", status: "occupied" },
+  { id: 10, lat: 30.7333, lng: 76.7794, name: "Chandigarh Sector 17", status: "available" },
 ];
 
 const words = [
@@ -183,8 +189,8 @@ export default function MapComponent() {
 
   return (
     <div className="relative w-full h-[400px] bg-black overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 z-10 pointer-events-none" />
       
       <div 
         ref={mapRef} 
@@ -194,7 +200,7 @@ export default function MapComponent() {
       
       <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
         <div className="text-center text-white">
-          <TypewriterEffectSmooth words={words} className="text-3xl md:text-4xl font-bold" />
+          <TypewriterEffectSmooth words={words} className="text-3xl md:text-4xl font-bold" style={{textShadow: '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,1)'}} />
         </div>
       </div>
     </div>

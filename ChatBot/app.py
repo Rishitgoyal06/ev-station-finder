@@ -80,7 +80,6 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route("/predict", methods=["POST"])
-@login_required
 def predict():
     data = request.get_json()
     text = data.get("message")
@@ -89,7 +88,6 @@ def predict():
     return jsonify({"answer": response})
 
 @app.route("/get_greeting", methods=["POST"])
-@login_required
 def get_greeting():
     data = request.get_json()
     language = data.get("language", "en")

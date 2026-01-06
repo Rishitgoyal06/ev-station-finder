@@ -20,7 +20,7 @@ export function NavBar() {
 
   const navItems = [
     { name: "Home", link: "/" },
-    { name: "About Us", link: "#about" },
+    { name: "About Us", link: "/about" },
     { name: "Features", link: "#features" },
     { name: "Services", link: "#services" },
     { name: "Contact Us", link: "#contact" },

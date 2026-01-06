@@ -4,6 +4,7 @@ import Image from "next/image";
 import { HeroSection } from "@/components/HeroSection";
 import { LiveMap } from "@/components/LiveMap";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);

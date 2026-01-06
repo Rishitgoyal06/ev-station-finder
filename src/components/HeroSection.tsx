@@ -31,25 +31,25 @@ export function HeroSection() {
           </div>
         </h1>
         
-        <p className="text-lg md:text-xl lg:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+        <p className="text-lg md:text-xl lg:text-2xl text-gray-200 mb-12 max-w-4xl mx-auto leading-relaxed">
           Discover India's largest EV charging network with{" "}
-          <span className="text-green-400 font-semibold hover:text-green-300 transition-colors">real-time availability</span> and{" "}
-          <span className="text-emerald-400 font-semibold hover:text-emerald-300 transition-colors">intelligent routing</span>{" "}
+          <span className="text-green-300 font-semibold hover:text-green-200 transition-colors">real-time availability</span> and{" "}
+          <span className="text-emerald-300 font-semibold hover:text-emerald-200 transition-colors">intelligent routing</span>{" "}
           to power your journey.
         </p>
         
         <div className="flex flex-wrap justify-center gap-8 mb-12">
           <div className="text-center group cursor-pointer">
             <div className="text-2xl md:text-3xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">5000+</div>
-            <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">Charging Stations</div>
+            <div className="text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Charging Stations</div>
           </div>
           <div className="text-center group cursor-pointer">
             <div className="text-2xl md:text-3xl font-bold text-emerald-400 group-hover:scale-110 transition-transform duration-300">50K+</div>
-            <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">Happy Users</div>
+            <div className="text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Happy Users</div>
           </div>
           <div className="text-center group cursor-pointer">
             <div className="text-2xl md:text-3xl font-bold text-cyan-400 group-hover:scale-110 transition-transform duration-300">24/7</div>
-            <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">Support</div>
+            <div className="text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Support</div>
           </div>
         </div>
         

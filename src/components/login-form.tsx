@@ -10,8 +10,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import Lottie from "lottie-react"
-import signupFlowAnimation from "@/components/assets/Signup Flow.json"
+import { LottieAnimation } from "@/components/ui/lottie-animation"
 
 export function LoginForm({
   className,
@@ -100,10 +99,10 @@ export function LoginForm({
           </form>
           <div className="bg-gradient-to-br from-green-500/20 to-black relative hidden md:block">
             <div className="absolute inset-0 flex items-center justify-center">
-              <Lottie 
-                animationData={signupFlowAnimation} 
-                loop={true}
+              <LottieAnimation 
+                src="/animations/Signup Flow.json"
                 className="w-full h-full max-w-md max-h-md"
+                fallback={<div className="w-full h-full bg-green-400/10 rounded-xl animate-pulse" />}
               />
             </div>
           </div>

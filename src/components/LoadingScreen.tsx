@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Lottie from "lottie-react";
-import chargingAnimation from "@/components/assets/charging electricity.json";
+import { LottieAnimation } from "@/components/ui/lottie-animation";
 
 interface LoadingScreenProps {
   isLoading: boolean;
@@ -30,10 +29,10 @@ export function LoadingScreen({ isLoading, onComplete }: LoadingScreenProps) {
       isLoading ? 'opacity-100' : 'opacity-0'
     }`}>
       <div className="flex flex-col items-center gap-6">
-        <Lottie 
-          animationData={chargingAnimation}
-          loop={true}
+        <LottieAnimation 
+          src="/animations/charging electricity.json"
           className="w-64 h-64"
+          fallback={<div className="w-64 h-64 bg-green-400/10 rounded-xl animate-pulse" />}
         />
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-2">

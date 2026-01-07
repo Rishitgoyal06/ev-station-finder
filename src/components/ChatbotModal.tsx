@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
+import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 
 interface Message {
   id: number;
@@ -26,6 +27,12 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
   const [language, setLanguage] = useState('en');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Swipe to close modal
+  useSwipeGestures({
+    onSwipeRight: onClose,
+    threshold: 100
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -122,7 +129,7 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
             </div>
             <div>
               <h3 className="text-white font-semibold">EV Assistant</h3>
-              <p className="text-slate-400 text-sm">Your Electric Vehicle Expert</p>
+              <p className="text-slate-400 text-sm">Swipe right to close</p>
             </div>
           </div>
           <button

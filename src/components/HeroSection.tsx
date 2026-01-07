@@ -37,15 +37,15 @@ export function HeroSection() {
         </p>
         
         <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-10 md:mb-12">
-          <div className="text-center group cursor-pointer">
+          <div className="text-center group cursor-pointer hover:bg-white/5 rounded-lg p-4 transition-all duration-300 hover:scale-110">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">5000+</div>
             <div className="text-xs sm:text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Charging Stations</div>
           </div>
-          <div className="text-center group cursor-pointer">
+          <div className="text-center group cursor-pointer hover:bg-white/5 rounded-lg p-4 transition-all duration-300 hover:scale-110">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-400 group-hover:scale-110 transition-transform duration-300">50K+</div>
             <div className="text-xs sm:text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Happy Users</div>
           </div>
-          <div className="text-center group cursor-pointer">
+          <div className="text-center group cursor-pointer hover:bg-white/5 rounded-lg p-4 transition-all duration-300 hover:scale-110">
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-cyan-400 group-hover:scale-110 transition-transform duration-300">24/7</div>
             <div className="text-xs sm:text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Support</div>
           </div>

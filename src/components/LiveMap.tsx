@@ -30,9 +30,9 @@ const words = [
 const DynamicMap = dynamic(() => import('./MapComponent'), {
   ssr: false,
   loading: () => (
-    <div className="relative w-full h-[400px] bg-black overflow-hidden flex items-center justify-center">
+    <div className="relative w-full h-[300px] sm:h-[350px] md:h-[400px] bg-black overflow-hidden flex items-center justify-center px-4">
       <div className="text-white text-center">
-        <TypewriterEffectSmooth words={words} className="text-3xl md:text-4xl font-bold" />
+        <TypewriterEffectSmooth words={words} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold" />
       </div>
     </div>
   ),
@@ -42,26 +42,26 @@ export function LiveMap() {
   return (
     <>
       <DynamicMap />
-      <section className="py-20 bg-black relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-7 gap-20 items-center">
-            <div className="text-left md:col-span-2 relative">
-              <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-green-400/40 via-green-500/25 to-green-600/15 rounded-full" />
+      <section className="py-12 sm:py-16 md:py-20 bg-black relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-8 sm:gap-12 lg:gap-20 items-center">
+            <div className="text-center lg:text-left lg:col-span-2 relative order-2 lg:order-1">
+              <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-green-400/40 via-green-500/25 to-green-600/15 rounded-full hidden lg:block" />
               <div className="mb-6 relative">
-                <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight drop-shadow-2xl">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-4 sm:mb-6 leading-tight drop-shadow-2xl">
                   EV{" "}
                   <span className="bg-gradient-to-r from-green-300 via-green-400 to-green-500 bg-clip-text text-transparent animate-pulse">
                     Charging
                   </span>
                 </h2>
-                <p className="text-2xl md:text-3xl lg:text-4xl text-green-300 font-semibold mb-4 drop-shadow-lg">
+                <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-green-300 font-semibold mb-3 sm:mb-4 drop-shadow-lg">
                   In 3 Simple Steps
                 </p>
-                <div className="w-20 h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full shadow-lg shadow-green-400/25" />
-                <div className="absolute -bottom-2 left-0 w-32 h-0.5 bg-gradient-to-r from-green-400/15 to-transparent rounded-full animate-pulse" />
+                <div className="w-16 sm:w-20 h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full shadow-lg shadow-green-400/25 mx-auto lg:mx-0" />
+                <div className="absolute -bottom-2 left-1/2 lg:left-0 transform -translate-x-1/2 lg:translate-x-0 w-24 sm:w-32 h-0.5 bg-gradient-to-r from-green-400/15 to-transparent rounded-full animate-pulse" />
               </div>
             </div>
-            <div className="md:col-span-5 -mr-20 ml-12 relative group">
+            <div className="lg:col-span-5 relative group order-1 lg:order-2 lg:-mr-20 lg:ml-12">
               <div className="absolute -inset-2 bg-green-400/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <Image
                 src="/Plug in your vehicle and start charging instantly with a smooth, reliable experience..png"

@@ -112,8 +112,8 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
   ];
 
   return (
-    <div className="fixed bottom-20 right-6 z-50">
-      <div className="bg-slate-900 rounded-2xl shadow-2xl w-96 h-[500px] flex flex-col border border-slate-700">
+    <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 w-full max-w-sm sm:max-w-md">
+      <div className="bg-slate-900 rounded-2xl shadow-2xl w-full h-[400px] sm:h-[500px] flex flex-col border border-slate-700 mx-4 sm:mx-0">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800 rounded-t-2xl">
           <div className="flex items-center space-x-3">

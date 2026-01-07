@@ -200,17 +200,28 @@ export const MobileNavMenu = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className={cn(
-            "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-white px-4 py-8 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] dark:bg-neutral-950",
-            className,
-          )}
-        >
-          {children}
-        </motion.div>
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+          {/* Menu */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={cn(
+              "absolute inset-x-4 top-16 z-50 flex w-auto flex-col items-start justify-start gap-4 rounded-xl bg-gray-900/95 backdrop-blur-md px-6 py-8 shadow-2xl border border-white/10",
+              className,
+            )}
+          >
+            {children}
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
@@ -223,10 +234,18 @@ export const MobileNavToggle = ({
   isOpen: boolean;
   onClick: () => void;
 }) => {
-  return isOpen ? (
-    <IconX className="text-black dark:text-white" onClick={onClick} />
-  ) : (
-    <IconMenu2 className="text-black dark:text-white" onClick={onClick} />
+  return (
+    <button
+      onClick={onClick}
+      className="p-2 text-white hover:text-green-400 transition-colors"
+      aria-label="Toggle mobile menu"
+    >
+      {isOpen ? (
+        <IconX className="w-6 h-6" />
+      ) : (
+        <IconMenu2 className="w-6 h-6" />
+      )}
+    </button>
   );
 };
 
@@ -234,15 +253,14 @@ export const NavbarLogo = () => {
   return (
     <a
       href="#"
-      className="relative z-20 mr-4 flex items-center px-2 py-1 text-sm font-normal text-black"
+      className="relative z-20 flex items-center px-2 py-1 text-sm font-normal"
     >
       <img
         src="./logo.png"
         alt="logo"
-        width={100}
-        height={80}
+        className="w-16 h-12 sm:w-20 sm:h-16 md:w-24 md:h-20"
       />
-      <span className="font-bold text-3xl text-green-500">Charge IQ</span>
+      <span className="font-bold text-xl sm:text-2xl md:text-3xl text-green-500 ml-2">Charge IQ</span>
     </a>
   );
 };

@@ -186,7 +186,7 @@ export default function MapComponent() {
   }, []);
 
   return (
-    <div className="relative w-full h-[400px] bg-black overflow-hidden">
+    <div className="relative w-full h-[300px] sm:h-[350px] md:h-[400px] bg-black overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent z-10 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 z-10 pointer-events-none" />
       
@@ -196,9 +196,9 @@ export default function MapComponent() {
         style={{ background: '#000000' }}
       />
       
-      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none px-4">
         <div className="text-center text-white">
-          <TypewriterEffectSmooth words={words} className="text-3xl md:text-4xl font-bold" style={{textShadow: '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,1)'}} />
+          <TypewriterEffectSmooth words={words} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold" style={{textShadow: '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,1)'}} />
         </div>
       </div>
     </div>

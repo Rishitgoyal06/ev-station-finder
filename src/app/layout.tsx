@@ -55,7 +55,6 @@ export default function RootLayout({
           <ChatbotButton />
         </AuthProvider>
         <Footer />
-
       </body>
     </html>
   );

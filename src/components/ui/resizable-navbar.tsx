@@ -117,6 +117,15 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
 export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
+  const defaultItems = [
+    { name: "Home", link: "/" },
+    { name: "Features", link: "/features" },
+    { name: "About", link: "/#about" },
+    { name: "Contact", link: "/contact" }
+  ];
+
+  const navItems = items.length > 0 ? items : defaultItems;
+
   return (
     <motion.div
       onMouseLeave={() => setHovered(null)}
@@ -125,7 +134,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         className,
       )}
     >
-      {items.map((item, idx) => (
+      {navItems.map((item, idx) => (
         <a
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}

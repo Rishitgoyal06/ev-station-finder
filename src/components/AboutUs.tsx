@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import Lottie from "lottie-react";
 import { useEffect } from "react";
+import { ChartNoAxesCombined, Search, Smartphone } from "lucide-react";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -60,17 +61,17 @@ export default function AboutSection() {
     {
       title: "Smart Discovery",
       description: "AI-powered station recommendations based on your route and preferences",
-      icon: "🔍"
+      icon: <Search size={28} />  
     },
     {
       title: "Real-time Availability",
       description: "Live updates on charging port availability and wait times",
-      icon: "📊"
+      icon: <ChartNoAxesCombined size={28} color="#ffffff" />
     },
     {
       title: "Seamless Booking",
       description: "Reserve your charging slot and pay in advance for hassle-free experience",
-      icon: "📱"
+      icon: <Smartphone size={28} color="#ffffff" />
     }
   ];
 

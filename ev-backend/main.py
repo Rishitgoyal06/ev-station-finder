@@ -1,16 +1,10 @@
-from fastapi import FastAPI, Query, HTTPException, Depends
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel
-from datetime import datetime, timedelta
 import requests
 import os
 import math
-import jwt
-import bcrypt
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -32,59 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --------------------------------------------------
-# MongoDB Config
-# --------------------------------------------------
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-client = AsyncIOMotorClient(MONGO_URL)
-db = client.ev_backend
-users_collection = db.users
-search_history_collection = db.search_history
-reviews_collection = db.reviews
-favorites_collection = db.favorites
 
-# --------------------------------------------------
-# JWT Config
-# --------------------------------------------------
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
-security = HTTPBearer()
-
-# --------------------------------------------------
-# Pydantic Models
-# --------------------------------------------------
-class UserRegister(BaseModel):
-    email: str
-    password: str
-    name: str
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-class Review(BaseModel):
-    place_id: str
-    rating: int
-    comment: str
-
-class Favorite(BaseModel):
-    place_id: str
-    name: str
-    address: str
-    photo_urls: list = []
-
-# --------------------------------------------------
-# Auth Functions
-# --------------------------------------------------
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-        email = payload.get("email")
-        user = await users_collection.find_one({"email": email})
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 # --------------------------------------------------
 # Google Places Config
@@ -102,168 +44,7 @@ DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json"
 def read_index():
     return FileResponse('static/index.html')
 
-# --------------------------------------------------
-# Auth Routes
-# --------------------------------------------------
-@app.post("/register")
-async def register(user: UserRegister):
-    existing_user = await users_collection.find_one({"email": user.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-    user_doc = {
-        "email": user.email,
-        "password": hashed_password,
-        "name": user.name,
-        "created_at": datetime.utcnow()
-    }
-    await users_collection.insert_one(user_doc)
-    return {"message": "User registered successfully"}
 
-@app.post("/login")
-async def login(user: UserLogin):
-    db_user = await users_collection.find_one({"email": user.email})
-    if not db_user or not bcrypt.checkpw(user.password.encode('utf-8'), db_user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token = jwt.encode({"email": user.email, "exp": datetime.utcnow() + timedelta(days=7)}, JWT_SECRET)
-    return {"token": token, "user": {"email": db_user["email"], "name": db_user["name"]}}
-
-# --------------------------------------------------
-# User Data Routes
-# --------------------------------------------------
-@app.post("/search-history")
-async def add_search_history(request: dict, user = Depends(get_current_user)):
-    query = request.get("query")
-    if not query:
-        raise HTTPException(status_code=400, detail="Query is required")
-    
-    # Check if this exact query already exists for this user
-    existing = await search_history_collection.find_one({
-        "user_email": user["email"],
-        "query": query
-    })
-    
-    if existing:
-        # Update timestamp of existing entry
-        await search_history_collection.update_one(
-            {"_id": existing["_id"]},
-            {"$set": {"timestamp": datetime.utcnow()}}
-        )
-    else:
-        # Create new entry
-        history_doc = {
-            "user_email": user["email"],
-            "query": query,
-            "timestamp": datetime.utcnow()
-        }
-        await search_history_collection.insert_one(history_doc)
-    
-    return {"message": "Search history added"}
-
-@app.get("/search-history")
-async def get_search_history(user = Depends(get_current_user)):
-    history = await search_history_collection.find({"user_email": user["email"]}).sort("timestamp", -1).limit(20).to_list(20)
-    return {"history": [h["query"] for h in history]}
-
-@app.delete("/search-history")
-async def clear_search_history(user = Depends(get_current_user)):
-    await search_history_collection.delete_many({"user_email": user["email"]})
-    return {"message": "Search history cleared"}
-
-@app.post("/reviews")
-async def add_review(review: Review, user = Depends(get_current_user)):
-    # Get place details for storing with review
-    place_details = {}
-    if review.place_id:
-        details_params = {
-            "place_id": review.place_id,
-            "fields": "name,formatted_address,photos,geometry,formatted_phone_number",
-            "key": GOOGLE_API_KEY
-        }
-        details_response = requests.get(PLACE_DETAILS_URL, params=details_params, timeout=5)
-        details_data = details_response.json()
-        
-        if details_data.get("status") == "OK" and details_data.get("result"):
-            result = details_data["result"]
-            place_details["name"] = result.get("name")
-            place_details["address"] = result.get("formatted_address")
-            place_details["phone"] = result.get("formatted_phone_number")
-            if result.get("geometry", {}).get("location"):
-                place_details["latitude"] = result["geometry"]["location"]["lat"]
-                place_details["longitude"] = result["geometry"]["location"]["lng"]
-            
-            # Get photos
-            photo_urls = []
-            if result.get("photos"):
-                for photo in result["photos"][:3]:
-                    photo_ref = photo.get("photo_reference")
-                    if photo_ref:
-                        photo_urls.append(
-                            f"https://maps.googleapis.com/maps/api/place/photo"
-                            f"?maxwidth=1200"
-                            f"&photo_reference={photo_ref}"
-                            f"&key={GOOGLE_API_KEY}"
-                        )
-            place_details["photo_urls"] = photo_urls
-    
-    review_doc = {
-        "user_email": user["email"],
-        "user_name": user["name"],
-        "place_id": review.place_id,
-        "rating": review.rating,
-        "comment": review.comment,
-        "place_details": place_details,
-        "timestamp": datetime.utcnow()
-    }
-    await reviews_collection.insert_one(review_doc)
-    return {"message": "Review added"}
-
-@app.get("/my-reviews")
-async def get_my_reviews(user = Depends(get_current_user)):
-    reviews = await reviews_collection.find({"user_email": user["email"]}).sort("timestamp", -1).to_list(100)
-    return {"reviews": [{"review_id": str(r["_id"]), "place_id": r["place_id"], "rating": r["rating"], "comment": r["comment"], "timestamp": r["timestamp"], "place_details": r.get("place_details", {})} for r in reviews]}
-
-@app.delete("/reviews/{review_id}")
-async def remove_review(review_id: str, user = Depends(get_current_user)):
-    from bson import ObjectId
-    result = await reviews_collection.delete_one({"_id": ObjectId(review_id), "user_email": user["email"]})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Review not found")
-    return {"message": "Review removed"}
-
-@app.get("/reviews/{place_id}")
-async def get_reviews(place_id: str):
-    reviews = await reviews_collection.find({"place_id": place_id}).sort("timestamp", -1).to_list(50)
-    return {"reviews": [{"user_name": r["user_name"], "rating": r["rating"], "comment": r["comment"], "timestamp": r["timestamp"]} for r in reviews]}
-
-@app.post("/favorites")
-async def add_favorite(favorite: Favorite, user = Depends(get_current_user)):
-    existing = await favorites_collection.find_one({"user_email": user["email"], "place_id": favorite.place_id})
-    if existing:
-        return {"message": "Already in favorites"}
-    
-    favorite_doc = {
-        "user_email": user["email"],
-        "place_id": favorite.place_id,
-        "name": favorite.name,
-        "address": favorite.address,
-        "photo_urls": favorite.photo_urls,
-        "timestamp": datetime.utcnow()
-    }
-    await favorites_collection.insert_one(favorite_doc)
-    return {"message": "Added to favorites"}
-
-@app.get("/favorites")
-async def get_favorites(user = Depends(get_current_user)):
-    favorites = await favorites_collection.find({"user_email": user["email"]}).sort("timestamp", -1).to_list(100)
-    return {"favorites": [{"place_id": f["place_id"], "name": f["name"], "address": f["address"], "photo_urls": f.get("photo_urls", [])} for f in favorites]}
-
-@app.delete("/favorites/{place_id}")
-async def remove_favorite(place_id: str, user = Depends(get_current_user)):
-    await favorites_collection.delete_one({"user_email": user["email"], "place_id": place_id})
-    return {"message": "Removed from favorites"}
 
 # --------------------------------------------------
 # Health Check

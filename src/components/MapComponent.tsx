@@ -197,8 +197,8 @@ export default function MapComponent() {
       />
       
       <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none px-4">
-        <div className="text-center text-white">
-          <TypewriterEffectSmooth words={words} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold" style={{textShadow: '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,1)'}} />
+        <div className="text-center text-white" style={{textShadow: '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.6), 2px 2px 4px rgba(0,0,0,1)'}}>
+          <TypewriterEffectSmooth words={words} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold" />
         </div>
       </div>
     </div>

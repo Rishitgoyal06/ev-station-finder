@@ -44,6 +44,13 @@ DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json"
 def read_index():
     return FileResponse('static/index.html')
 
+# --------------------------------------------------
+# Navigate
+# --------------------------------------------------
+@app.get("/navigate")
+def navigate(lat: float = Query(...), lng: float = Query(...)):
+    return {"url": f"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}"}
+
 
 
 # --------------------------------------------------
@@ -74,10 +81,17 @@ def calculate_distance(lat1, lng1, lat2, lng2):
 # --------------------------------------------------
 def estimate_travel_time(distance_m):
     distance_km = distance_m / 1000
-    hours = distance_km / 40
-    if hours < 1:
-        return f"{round(hours * 60)} min"
-    return f"{round(hours, 1)} hr"
+    minutes = round(distance_km / 40 * 60)
+    if minutes < 60:
+        return f"{minutes} min"
+    hours = minutes // 60
+    mins = minutes % 60
+    return f"{hours} hr {mins} min" if mins else f"{hours} hr"
+
+def format_distance(distance_m):
+    if distance_m < 1000:
+        return f"{distance_m} m"
+    return f"{distance_m / 1000:.1f} km"
 
 # --------------------------------------------------
 # EV Detection (Score-based)
@@ -207,7 +221,7 @@ def is_ev_station(place: dict) -> bool:
 def get_ev_stations(
     lat: float = Query(...),
     lng: float = Query(...),
-    radius: int = Query(5000)
+    radius: int = Query(30000)  # default 5km, frontend no longer needs to hardcode this
 ):
     if not GOOGLE_API_KEY:
         return {"error": "Google API key not configured"}
@@ -284,6 +298,7 @@ def get_ev_stations(
             "open_now": place.get("opening_hours", {}).get("open_now"),
             "place_id": place.get("place_id"),
             "distance_m": round(distance),
+            "distance_str": format_distance(round(distance)),
             "estimated_time": estimate_travel_time(distance),
             "photo_urls": photo_urls,
             "phone_no": phone_number
@@ -298,7 +313,11 @@ def get_ev_stations(
 # Text Search
 # --------------------------------------------------
 @app.get("/search")
-def search_places(query: str = Query(...)):
+def search_places(
+    query: str = Query(...),
+    lat: float = Query(None),
+    lng: float = Query(None)
+):
     if not GOOGLE_API_KEY:
         return {"error": "Google API key not configured"}
 
@@ -354,16 +373,21 @@ def search_places(query: str = Query(...)):
                             )
                 phone_number = result.get("formatted_phone_number")
 
+        place_lat = loc["lat"]
+        place_lng = loc["lng"]
+        distance = calculate_distance(lat, lng, place_lat, place_lng) if lat is not None and lng is not None else None
+
         cleaned_results.append({
             "name": place.get("name"),
-            "latitude": loc["lat"],
-            "longitude": loc["lng"],
+            "latitude": place_lat,
+            "longitude": place_lng,
             "address": place.get("formatted_address"),
             "rating": place.get("rating"),
             "open_now": place.get("opening_hours", {}).get("open_now"),
             "place_id": place.get("place_id"),
-            "distance_m": None,
-            "estimated_time": None,
+            "distance_m": round(distance) if distance is not None else None,
+            "distance_str": format_distance(round(distance)) if distance is not None else None,
+            "estimated_time": estimate_travel_time(distance) if distance is not None else None,
             "photo_urls": photo_urls,
             "phone_no": phone_number
         })
@@ -384,9 +408,13 @@ def get_directions(
     dest_lng: float = Query(...),
     route_type: str = Query("fastest")  # fastest, shortest, eco
 ):
+    # Whitelist route_type to prevent unexpected values
+    if route_type not in ("fastest", "shortest", "eco"):
+        route_type = "fastest"
+
     # Use OSRM public API for real road routing
-    osrm_url = "http://router.project-osrm.org/route/v1/driving"
-    
+    osrm_url = "https://router.project-osrm.org/route/v1/driving"
+
     # Build coordinates string
     coords = f"{origin_lng},{origin_lat};{dest_lng},{dest_lat}"
     
@@ -432,11 +460,9 @@ def get_directions(
         
         # Adjust for route type preferences
         if route_type == "eco":
-            # Eco routes might be slightly longer but more efficient
             duration_min = int(duration_min * 1.1)  # Slower, more efficient driving
-        elif route_type == "fastest":
-            # Fastest routes optimize for time
-            duration_min = int(duration_min * 0.95)  # Slightly faster estimate
+        elif route_type == "shortest":
+            duration_min = int(duration_min * 1.2)  # Local roads, more stops
         
         # Get route type benefits
         benefits = get_route_benefits(route_type, distance_km, duration_min)
@@ -486,10 +512,11 @@ def get_simple_route(origin_lat, origin_lng, dest_lat, dest_lng, route_type):
     distance_km = distance_m / 1000
     
     # Adjust time based on route type
+    # Lower multiplier = faster (divides into base 40 km/h speed)
     speed_multiplier = {
-        "fastest": 1.0,    # 40 km/h
-        "shortest": 1.2,  # 33 km/h (slower, more direct)
-        "eco": 0.8        # 50 km/h (efficient speed)
+        "fastest": 0.8,   # ~50 km/h — fastest
+        "shortest": 1.2,  # ~33 km/h — local roads, more stops
+        "eco": 1.0        # ~40 km/h — moderate, efficient
     }
     
     duration_min = int(distance_km / 40 * 60 * speed_multiplier.get(route_type, 1.0))
@@ -514,8 +541,8 @@ def get_route_benefits(route_type, distance_km, duration_min):
     """Get benefits text for each route type"""
     if route_type == "eco":
         fuel_saved = distance_km * 0.1  # Estimate 10% fuel savings
-        return f"🌱 Eco-friendly • Saves ~{fuel_saved:.1f}L fuel • Lower emissions"
+        return f"Eco-friendly • Saves ~{fuel_saved:.1f}L fuel • Lower emissions"
     elif route_type == "shortest":
-        return f"📏 Shortest distance • Direct route • Less wear on vehicle"
+        return f"Shortest distance • Direct route • Less wear on vehicle"
     else:
-        return f"⚡ Fastest route • Saves time • Optimal traffic flow"
+        return f"Fastest route • Saves time • Optimal traffic flow"

@@ -598,7 +598,10 @@
                         (error) => {
                             console.error('Location error:', error);
                             this.hideLoading();
-                            alert('Could not get your location. Please enable location services.');
+                            const msg = document.getElementById('loading');
+                            msg.style.display = 'block';
+                            msg.innerHTML = '<div style="color:#ef4444;font-weight:600;">📍 Location access denied.<br>Enable location or search manually.</div>';
+                            setTimeout(() => { msg.style.display = 'none'; msg.innerHTML = '<div class="spinner"></div><div>Searching stations...</div>'; }, 4000);
                         }
                     );
                 } else {
@@ -635,7 +638,10 @@
 
                 this.showLoading();
                 try {
-                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                    const locationParams = this.userLocation
+                        ? `&lat=${this.userLocation.lat}&lng=${this.userLocation.lng}`
+                        : '';
+                    const response = await fetch(`/search?query=${encodeURIComponent(query)}${locationParams}`);
                     const data = await response.json();
                     
                     if (data.error) {
@@ -667,7 +673,7 @@
                 this.showLoading();
                 try {
                     const response = await fetch(
-                        `/ev-stations?lat=${this.userLocation.lat}&lng=${this.userLocation.lng}&radius=5000`
+                        `/ev-stations?lat=${this.userLocation.lat}&lng=${this.userLocation.lng}`
                     );
                     const data = await response.json();
                     
@@ -699,7 +705,7 @@
 
                 const bounds = L.latLngBounds();
 
-                stations.forEach(station => {
+                stations.forEach((station, index) => {
                     const evIcon = L.divIcon({
                         className: 'ev-marker',
                         iconSize: [20, 20],
@@ -710,8 +716,11 @@
                         icon: evIcon
                     }).addTo(this.map);
 
+                    // Store station index on marker for precise lookup
+                    marker._stationIndex = index;
+
                     // Create popup content
-                    const popupContent = this.createPopupContent(station);
+                    const popupContent = this.createPopupContent(station, index);
                     marker.bindPopup(popupContent, { maxWidth: 300 });
 
                     this.markers.push(marker);
@@ -726,7 +735,7 @@
                 }
             }
 
-            createPopupContent(station) {
+            createPopupContent(station, index) {
                 let content = `
                     <div class="station-popup">
                         <div class="station-header">${station.name}</div>
@@ -740,11 +749,8 @@
                     content += `<div class="station-info station-rating"><i class="fas fa-star"></i> ${station.rating}/5</div>`;
                 }
 
-                if (station.distance_m !== null) {
-                    const distance = station.distance_m < 1000 
-                        ? `${station.distance_m}m` 
-                        : `${(station.distance_m / 1000).toFixed(1)}km`;
-                    content += `<div class="station-info station-distance"><i class="fas fa-route"></i> ${distance} away</div>`;
+                if (station.distance_str) {
+                    content += `<div class="station-info station-distance"><i class="fas fa-route"></i> ${station.distance_str} away</div>`;
                 }
 
                 if (station.estimated_time) {
@@ -763,26 +769,28 @@
 
                 // Add photos if available
                 if (station.photo_urls && station.photo_urls.length > 0) {
+                    // Store photos on window by station index to avoid JSON encoding issues
+                    window._stationPhotos = window._stationPhotos || {};
+                    window._stationPhotos[index] = station.photo_urls;
                     content += '<div class="station-photos">';
-                    station.photo_urls.forEach((photoUrl, index) => {
-                        const photosJson = JSON.stringify(station.photo_urls).replace(/"/g, '&quot;');
-                        content += `<img src="${photoUrl}" class="station-photo" onclick="openGallery('${photosJson}', ${index})" />`;
+                    station.photo_urls.forEach((photoUrl, photoIndex) => {
+                        content += `<img src="${photoUrl}" class="station-photo" onclick="openGallery(${index}, ${photoIndex})" />`;
                     });
                     content += '</div>';
                 }
 
-                // Add action buttons
+                // Add action buttons — use station index for unique IDs and safe name passing
                 content += `
                     <div class="station-actions">
-                        <select id="routeType-${station.latitude}-${station.longitude}" style="padding: 6px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 8px; width: 100%;">
-                            <option value="fastest">⚡ Fastest Route</option>
-                            <option value="shortest">📏 Shortest Route</option>
-                            <option value="eco">🌱 Eco-Friendly Route</option>
+                        <select id="routeType-${index}" style="padding: 6px; border-radius: 5px; border: 1px solid #ddd; margin-bottom: 8px; width: 100%;">
+                            <option value="fastest">Fastest Route</option>
+                            <option value="shortest">Shortest Route</option>
+                            <option value="eco"> Eco-Friendly Route</option>
                         </select>
-                        <button class="action-btn" onclick="evFinder.getDirections(${station.latitude}, ${station.longitude}, '${station.name.replace(/'/g, "\\'")}')">
+                        <button class="action-btn" onclick="evFinder.getDirections(${station.latitude}, ${station.longitude}, ${index})">
                             <i class="fas fa-route"></i> Route
                         </button>
-                        <button class="action-btn" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}', '_blank')">
+                        <button class="action-btn" onclick="evFinder.openNavigation(${station.latitude}, ${station.longitude})">
                             <i class="fas fa-directions"></i> Google
                         </button>
                 `;
@@ -810,17 +818,12 @@
                     return;
                 }
 
-                resultsList.innerHTML = stations.map(station => {
-                    const distance = station.distance_m !== null 
-                        ? (station.distance_m < 1000 
-                            ? `${station.distance_m}m` 
-                            : `${(station.distance_m / 1000).toFixed(1)}km`)
-                        : '';
-                    
+                resultsList.innerHTML = stations.map((station, index) => {
+                    const distance = station.distance_str || '';
                     const rating = station.rating ? `⭐ ${station.rating}` : '';
                     
                     return `
-                        <div class="result-item" onclick="evFinder.focusStation(${station.latitude}, ${station.longitude})">
+                        <div class="result-item" onclick="evFinder.focusStation(${index})">
                             <div class="result-name">${station.name}</div>
                             <div class="result-address">${station.address || 'Address not available'}</div>
                             <div class="result-meta">
@@ -832,17 +835,13 @@
                 }).join('');
             }
 
-            focusStation(lat, lng) {
-                this.map.setView([lat, lng], 16);
-                
-                // Find and open the popup for this station
-                this.markers.forEach(marker => {
-                    const markerLatLng = marker.getLatLng();
-                    if (Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lng) < 0.0001) {
-                        marker.openPopup();
-                    }
-                });
-                
+            focusStation(index) {
+                const station = this.currentResults[index];
+                if (!station) return;
+                this.map.setView([station.latitude, station.longitude], 16);
+                // Use index for precise marker lookup
+                const marker = this.markers.find(m => m._stationIndex === index);
+                if (marker) marker.openPopup();
                 this.hideResultsPanel();
             }
 
@@ -865,15 +864,18 @@
                 document.getElementById('listBtn').classList.remove('active');
             }
 
-            async getDirections(destLat, destLng, stationName) {
+            async getDirections(destLat, destLng, stationIndex) {
                 if (!this.userLocation) {
                     alert('Please allow location access first');
                     this.requestLocation();
                     return;
                 }
 
-                // Get selected route type
-                const routeTypeSelect = document.getElementById(`routeType-${destLat}-${destLng}`);
+                // Get station name safely from currentResults using index
+                const stationName = this.currentResults[stationIndex]?.name || 'EV Charging Station';
+
+                // Get selected route type using index-based ID
+                const routeTypeSelect = document.getElementById(`routeType-${stationIndex}`);
                 const routeType = routeTypeSelect ? routeTypeSelect.value : 'fastest';
 
                 this.showLoading();
@@ -1214,6 +1216,12 @@
                 document.body.appendChild(routeInfoDiv);
             }
 
+            async openNavigation(lat, lng) {
+                const response = await fetch(`/navigate?lat=${lat}&lng=${lng}`);
+                const data = await response.json();
+                window.open(data.url, '_blank');
+            }
+
             clearRoute() {
                 if (this.routeLayer) {
                     this.map.removeLayer(this.routeLayer);
@@ -1276,9 +1284,9 @@
         window.currentPhotos = [];
         window.currentPhotoIndex = 0;
         
-        window.openGallery = function(photosJson, currentIndex) {
-            window.currentPhotos = JSON.parse(photosJson.replace(/&quot;/g, '"'));
-            window.currentPhotoIndex = currentIndex;
+        window.openGallery = function(stationIndex, photoIndex) {
+            window.currentPhotos = (window._stationPhotos && window._stationPhotos[stationIndex]) || [];
+            window.currentPhotoIndex = photoIndex;
             showCurrentPhoto();
         };
         

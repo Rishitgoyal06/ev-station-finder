@@ -26,7 +26,6 @@ const scaleIn = {
 };
 
 export default function AboutSection() {
-  const [activeTab, setActiveTab] = useState(0);
   const [chargingAnimation, setChargingAnimation] = useState(null);
   const [businessTeamAnimation, setBusinessTeamAnimation] = useState(null);
   const [mapBrowsingAnimation, setMapBrowsingAnimation] = useState(null);
@@ -77,22 +76,20 @@ export default function AboutSection() {
 
   const team = [
     {
-      name: "Rajesh Kumar",
-      role: "CEO & Founder",
-      image: "/team/ceo.jpg",
-      description: "10+ years in clean energy and automotive technology"
+      name: "Rishit Goyal",
+      image: "/profile.png",
     },
     {
-      name: "Priya Sharma",
-      role: "CTO",
-      image: "/team/cto.jpg",
-      description: "Former Tesla engineer with expertise in EV infrastructure"
+      name: "Het Mehta",
+      image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg",
     },
     {
-      name: "Arjun Patel",
-      role: "Head of Operations",
-      image: "/team/ops.jpg",
-      description: "Scaling operations across 100+ cities in India"
+      name: "Anuj Dubey",
+      image: "/WhatsApp Image 2026-03-31 at 8.25.52 PM.jpeg",
+    },
+    {
+      name: "Shyamsundheraaj",
+      image: "/WhatsApp Image 2026-03-31 at 9.25.26 PM (1).jpeg",
     }
   ];
 
@@ -302,7 +299,7 @@ export default function AboutSection() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member, index) => (
               <motion.div 
                 key={index}
@@ -312,21 +309,13 @@ export default function AboutSection() {
                 className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20 text-center hover:border-green-400/40 transition-all group hover:scale-105"
               >
                 <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  {businessTeamAnimation && index === 0 ? (
-                    <Lottie 
-                      animationData={businessTeamAnimation} 
-                      loop={true}
-                      className="w-full h-full"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 bg-green-400/20 rounded-full flex items-center justify-center">
-                      <span className="text-3xl">👤</span>
-                    </div>
-                  )}
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-24 h-24 rounded-full object-cover border-2 border-green-400/40 group-hover:border-green-400 transition-colors"
+                  />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{member.name}</h3>
-                <p className="text-green-400 font-semibold mb-4">{member.role}</p>
-                <p className="text-gray-300 text-sm">{member.description}</p>
               </motion.div>
             ))}
           </div>

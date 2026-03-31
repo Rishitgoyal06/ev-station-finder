@@ -171,7 +171,7 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
                     : 'bg-gradient-to-r from-green-400 to-green-600 text-white rounded-br-sm'
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.text}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
               </div>
             </div>
           ))}

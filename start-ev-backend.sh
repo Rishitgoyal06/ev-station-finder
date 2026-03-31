@@ -39,15 +39,11 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Check if MongoDB is running (optional check)
-if ! pgrep -x "mongod" > /dev/null; then
-    echo "⚠️  Warning: MongoDB doesn't appear to be running."
-    echo "Please start MongoDB or update MONGO_URI in .env file."
-fi
+
 
 # Start the FastAPI application
 echo "🚀 Starting EV Backend on http://localhost:8000"
 echo "📚 API docs available at http://localhost:8000/docs"
 echo "Press Ctrl+C to stop the server"
 echo "========================================"
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-include="*.html"

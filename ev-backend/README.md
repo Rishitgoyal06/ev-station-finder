@@ -1,228 +1,226 @@
-# EV Station Finder - India API Documentation
-A real-time EV charging station discovery platform for India with smart routing and user management.
+# EV Station Finder - Backend
 
-## 🇮🇳 India-Specific Features
+FastAPI backend for finding EV charging stations across India with real-time routing and Google Places integration.
 
-- **Major EV Networks**: Tata Power, Ather Grid, Statiq, BPCL, IOCL, Adani Total Gas
-- **Connector Types**: CCS, CHAdeMO, Type 2, Bharat AC001, Bharat DC001
-- **Regional Coverage**: Delhi NCR, Mumbai, Bangalore, Chennai, Hyderabad, Pune
-- **Highway Corridors**: Delhi-Mumbai, Delhi-Kolkata, Chennai-Bangalore routes
-- **Government Stations**: EESL, state electricity boards
-
-## 🔄 System Flow
+## Architecture
 
 ```
-Frontend → Backend → Google Places API → India EV Filtering → Response Processing → Frontend Display
+Browser (index.html)
+        ↕ fetch API calls
+   main.py (FastAPI)
+        ↕                    ↕
+Google Places API        OSRM Routing API
 ```
 
-## 📡 API Architecture
+## Tech Stack
 
-### Core APIs
+- **FastAPI** — Python web framework
+- **Uvicorn** — ASGI server
+- **Requests** — HTTP calls to Google Places and OSRM
+- **Python-dotenv** — loads environment variables
 
-**1. Station Search (`/ev-stations`)**
-- **Input**: `lat`, `lng`, `radius` (coordinates for Indian cities)
-- **Process**: Google Places Nearby Search → India EV filtering → Photo fetching
-- **Output**: Filtered Indian EV stations with photos and metadata
-- **API Calls**: 1 + N (where N = number of stations for photos)
-- **Coverage**: 28 states, 8 union territories
+## Setup
 
-**2. Text Search (`/search`)**
-- **Input**: `query` string (supports Hindi transliteration)
-- **Process**: Google Places Text Search → India EV filtering → Photo fetching
-- **Output**: Indian EV stations matching search query
-- **API Calls**: 1 + N (where N = number of stations for photos)
-- **Examples**: "Tata Power", "Ather Grid", "BPCL charging"
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-**3. Station Details (`/station-details/{place_id}`)**
-- **Input**: Google Place ID
-- **Process**: Google Places Details API
-- **Output**: Complete Indian station information with operator details
-- **API Calls**: 1
+# Install dependencies
+pip install -r requirements.txt
 
-**4. Routing (`/directions`)**
-- **Input**: Origin/destination coordinates, route type
-- **Process**: OSRM routing API → India road optimization
-- **Output**: Optimized route for Indian road conditions
-- **API Calls**: 1
-- **Route Types**: Fastest (highways), Shortest (city), Eco (fuel-efficient)
+# Create .env file
+echo "GOOGLE_MAPS_API_KEY=your_google_maps_api_key" > .env
 
-### User Management APIs
-
-**Authentication**
-- `POST /register` - User registration with mobile number support
-- `POST /login` - JWT token generation
-
-**User Data**
-- `GET/POST/DELETE /favorites` - MongoDB operations for Indian stations
-- `GET/POST /reviews` - Review management in English/Hindi
-- `GET /search-history` - User search patterns across India
-
-## 🔢 API Call Analysis
-
-### Per Search Operation in India
-
-**Nearby Search (Delhi NCR example):**
-```
-1. Google Places Nearby Search API call
-2. N × Google Places Details API calls (for photos)
-Total: 1 + N calls (typically 1 + 8-15 = 9-16 calls)
+# Start server
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**Text Search ("Tata Power Mumbai"):**
-```
-1. Google Places Text Search API call
-2. N × Google Places Details API calls (for photos)
-Total: 1 + N calls (typically 1 + 5-12 = 6-13 calls)
+Or use the startup script:
+```bash
+./start.sh
 ```
 
-**Route Calculation (Mumbai-Pune corridor):**
-```
-1. OSRM API call (free, optimized for Indian roads)
-Total: 1 call (no Google API usage)
-```
+## Environment Variables
 
-## 🏗️ Backend Processing Flow
-
-### 1. India Station Discovery
-```python
-# Google Places API → India EV Detection → Photo Enhancement
-raw_places = google_places_api(location, radius)
-india_ev_stations = filter(is_india_ev_station, raw_places)
-enhanced_stations = add_photos_and_details(india_ev_stations)
+```
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
-### 2. India EV Station Detection
-```python
-def is_india_ev_station(place):
-    # Indian EV operators and keywords
-    operators = ["tata power", "ather", "statiq", "bpcl", "iocl", "adani", "eesl"]
-    keywords = ["ev", "charging", "charger", "electric", "विद्युत"]
-    return any(op in place.name.lower() for op in operators) or \
-           any(kw in place.name.lower() for kw in keywords)
+## API Endpoints
+
+### `GET /`
+Serves the frontend map interface (`static/index.html`).
+
+---
+
+### `GET /health`
+Health check.
+
+**Response:**
+```json
+{"status": "EV backend running"}
 ```
 
-### 3. Connector Type Detection
-```python
-def detect_connector_types(station_name, address):
-    # Predict connector types based on Indian operators
-    if "tata power" in station_name.lower():
-        return ["CCS", "Type 2"]
-    elif "ather" in station_name.lower():
-        return ["Type 2"]
-    elif "bpcl" in station_name.lower():
-        return ["CCS", "CHAdeMO"]
-    return ["CCS", "Type 2"]  # Default for India
-```
+---
 
-### 4. Route Optimization for India
-```python
-# OSRM optimized for Indian road conditions
-route = osrm_api(origin, destination, route_type)
-# Consider Indian factors: tolls, traffic, monsoon routes
-optimized_route = apply_india_route_preferences(route, route_type)
-```
+### `GET /ev-stations`
+Find nearby EV charging stations using GPS coordinates.
 
-## 🗄️ Data Flow
+**Query Parameters:**
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| lat | float | yes | — | Latitude |
+| lng | float | yes | — | Longitude |
+| radius | int | no | 5000 | Search radius in metres |
 
-### Frontend → Backend
-```javascript
-// Search in Delhi NCR
-fetch(`/ev-stations?lat=28.6139&lng=77.2090&radius=5000`)
-
-// Route Mumbai to Pune
-fetch(`/directions?origin_lat=19.0760&origin_lng=72.8777&dest_lat=18.5204&dest_lng=73.8567&route_type=fastest`)
-```
-
-### Backend → External APIs
-```python
-# Google Places for Indian locations
-requests.get("https://maps.googleapis.com/maps/api/place/nearbysearch/json", 
-            params={"location": "28.6139,77.2090", "keyword": "EV charging station"})
-
-# OSRM for Indian roads
-requests.get("http://router.project-osrm.org/route/v1/driving/77.2090,28.6139;73.8567,18.5204")
-```
-
-### Backend → Frontend
+**Response:**
 ```json
 {
-  "count": 12,
+  "count": 3,
   "results": [
     {
       "name": "Tata Power EZ Charge",
-      "latitude": 28.6139,
-      "longitude": 77.2090,
-      "distance_m": 800,
-      "photo_urls": ["url1", "url2"],
+      "latitude": 12.9716,
+      "longitude": 77.5946,
+      "address": "MG Road, Bangalore",
       "rating": 4.2,
-      "operator": "Tata Power",
-      "connector_types": ["CCS", "Type 2"],
-      "power_rating": "50kW DC Fast"
+      "open_now": true,
+      "place_id": "ChIJ...",
+      "distance_m": 800,
+      "distance_str": "800 m",
+      "estimated_time": "2 min",
+      "photo_urls": ["https://maps.googleapis.com/..."],
+      "phone_no": "+91 98765 43210"
     }
   ]
 }
 ```
 
-## 🚀 Performance Optimization
+---
 
-### API Call Reduction for India
-- **Regional Caching**: Cache popular routes (Delhi-Mumbai, Bangalore-Chennai)
-- **Operator Filtering**: Pre-filter by major Indian EV operators
-- **City-wise Optimization**: Optimized search patterns for metro cities
+### `GET /search`
+Search EV stations by text query.
 
-### India-Specific Optimizations
-- **Monsoon Routing**: Alternative routes during monsoon season
-- **Festival Traffic**: Route adjustments during Indian festivals
-- **Toll Optimization**: Minimize toll costs on highways
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| query | string | yes | Search text |
+| lat | float | no | User latitude for distance calculation |
+| lng | float | no | User longitude for distance calculation |
 
-## 🔧 Quick Setup for India
-
-```bash
-# Install dependencies
-pip3 install -r requirements.txt --break-system-packages
-
-# Configure for India
-echo "GOOGLE_MAPS_API_KEY=your_key" > .env
-echo "MONGO_URI=mongodb://localhost:27017/india_ev_stations" >> .env
-echo "JWT_SECRET=your_secret" >> .env
-echo "DEFAULT_COUNTRY=IN" >> .env
-echo "DEFAULT_LOCATION=28.6139,77.2090" >> .env  # Delhi
-
-# Start application
-./start.sh
-```
-
-## 📊 API Limits & Costs (India Usage)
-
-**Google Places API (India):**
-- Nearby Search: ₹2,400/1000 requests
-- Text Search: ₹2,400/1000 requests  
-- Place Details: ₹1,275/1000 requests
-- Photos: Free (via Place Details)
-
-**OSRM Routing:**
-- Free (self-hosted or public instance)
-
-**Typical Calls per Search **
-- 1 search + (5 detail calls per EV STATTION)
-
-## 🇮🇳 Indian EV Market Coverage
-
-**Major Operators Supported:**
-- Tata Power (2000+ stations)
-- Ather Grid (1500+ stations)
-- Statiq (1000+ stations)
-- BPCL (800+ stations)
-- IOCL (600+ stations)
-- Adani Total Gas (400+ stations)
-
-**Regional Coverage:**
-- North: Delhi NCR, Punjab, Haryana
-- West: Mumbai, Pune, Gujarat
-- South: Bangalore, Chennai, Hyderabad
-- East: Kolkata, Bhubaneswar
+**Response:** Same structure as `/ev-stations`. `distance_str` and `estimated_time` are `null` if `lat`/`lng` not provided.
 
 ---
 
-**Access**: http://localhost:8000 | **API Docs**: http://localhost:8000/docs
-**Optimized for Indian EV Infrastructure** 🇮🇳⚡
+### `GET /directions`
+Get driving route between two points.
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| origin_lat | float | yes | Origin latitude |
+| origin_lng | float | yes | Origin longitude |
+| dest_lat | float | yes | Destination latitude |
+| dest_lng | float | yes | Destination longitude |
+| route_type | string | no | `fastest` / `shortest` / `eco` (default: `fastest`) |
+
+**Response:**
+```json
+{
+  "distance": "5.2 km",
+  "duration": "12 min",
+  "route_type": "Fastest",
+  "benefits": "Fastest route • Saves time • Optimal traffic flow",
+  "start_address": "12.9716, 77.5946",
+  "end_address": "12.9352, 77.6245",
+  "route_points": [[12.9716, 77.5946], [12.9600, 77.6100], [12.9352, 77.6245]],
+  "steps": [
+    {
+      "instruction": "Head north on MG Road",
+      "distance": "2.1 km",
+      "duration": "5 min"
+    }
+  ]
+}
+```
+
+**Route Types:**
+| Type | Speed | Use case |
+|---|---|---|
+| fastest | ~50 km/h | Minimize travel time |
+| shortest | ~33 km/h | Minimize distance, local roads |
+| eco | ~40 km/h | Fuel efficient, moderate speed |
+
+---
+
+### `GET /navigate`
+Get Google Maps navigation URL for a station.
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| lat | float | yes | Station latitude |
+| lng | float | yes | Station longitude |
+
+**Response:**
+```json
+{
+  "url": "https://www.google.com/maps/dir/?api=1&destination=12.9716,77.5946"
+}
+```
+
+---
+
+## Helper Functions
+
+| Function | Description |
+|---|---|
+| `calculate_distance()` | Haversine formula — straight-line distance between two GPS coordinates in metres |
+| `estimate_travel_time()` | Converts distance to travel time assuming 40 km/h average speed |
+| `format_distance()` | Formats metres to `"800 m"` or `"2.3 km"` |
+| `is_ev_station()` | Keyword-based filter to detect real EV stations and remove false positives |
+| `extract_charger_types()` | Predicts charger type (CCS, CHAdeMO, Type 2) from brand and location keywords |
+| `get_route_benefits()` | Returns benefit text for each route type |
+| `get_simple_route()` | Fallback straight-line route when OSRM is unavailable |
+
+## Data Flow
+
+```
+1. User opens http://localhost:8000
+   → FastAPI serves static/index.html
+
+2. Browser requests GPS location
+   → User clicks Nearby button
+   → fetch /ev-stations?lat=&lng=
+   → main.py calls Google Places Nearby Search API
+   → Filters results using is_ev_station()
+   → For each station, calls Google Place Details API (photos + phone)
+   → Calculates distance using Haversine formula
+   → Returns enriched station list
+
+3. User clicks Route button on a station popup
+   → fetch /directions?origin_lat=&origin_lng=&dest_lat=&dest_lng=&route_type=
+   → main.py calls OSRM routing API
+   → Falls back to straight-line if OSRM fails
+   → Returns route polyline, distance, duration, steps
+
+4. User clicks Google button on a station popup
+   → fetch /navigate?lat=&lng=
+   → main.py returns Google Maps URL
+   → Browser opens Google Maps
+```
+
+## Google API Usage
+
+Each nearby/search request makes:
+- 1 × Google Places Nearby/Text Search call
+- N × Google Places Details calls (one per station, for photos and phone)
+
+Directions use OSRM which is **free and open-source** — no Google API calls.
+
+## Access
+
+- **Map Interface**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health

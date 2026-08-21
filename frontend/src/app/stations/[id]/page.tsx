@@ -106,7 +106,7 @@ export default function StationDetailPage() {
   }, [isAuthenticated, router, date, time, availableTimeSlots]);
   if (!isAuthenticated) return null;
 
-  const displayName = user || "Driver";
+  const displayName = typeof user === "string" ? user : user?.name || "Driver";
   const navLinks = [
     { label: "Dashboard", path: "/dashboard" },
     { label: "Stations", path: "/stations" },

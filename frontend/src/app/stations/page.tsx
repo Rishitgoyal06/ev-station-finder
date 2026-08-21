@@ -62,7 +62,7 @@ export default function StationsPage() {
   }, []);
 
   if (!isAuthenticated) return null;
-  const displayName = user || "Driver";
+  const displayName = typeof user === "string" ? user : user?.name || "Driver";
 
   const filtered = ALL_STATIONS
     .filter(s => filter === "All Chargers" || s.types.includes(filter))

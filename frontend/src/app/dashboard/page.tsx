@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
   if (!isAuthenticated) return null;
 
-  const displayName = user || "Driver";
+  const displayName = typeof user === "string" ? user : user?.name || "Driver";
   const estimatedRange = Math.round(battery * 3);
   const timeToFullMins = Math.round((100 - battery) * 1.1);
   const batteryColor = battery > 50 ? "#22c55e" : battery > 20 ? "#f59e0b" : "#ef4444";

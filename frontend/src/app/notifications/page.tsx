@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 
@@ -8,8 +8,13 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
+
   if (!isAuthenticated) {
-    router.replace("/");
     return null;
   }
 

@@ -1,12 +1,12 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 
 // Dynamically import map component to avoid SSR issues
 const DirectionsMap = dynamic(() => import("@/components/DirectionsMap"), { ssr: false });
 
-export default function DirectionsPage() {
+function DirectionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -162,5 +162,13 @@ export default function DirectionsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DirectionsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-4">Loading directions...</div>}>
+      <DirectionsContent />
+    </Suspense>
   );
 }

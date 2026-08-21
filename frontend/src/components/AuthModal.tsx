@@ -58,9 +58,9 @@ export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalP
         
         <div className={`transition-all duration-500 ${isFlipping ? 'opacity-50' : 'opacity-100'}`}>
           {mode === "login" ? (
-            <LoginForm onSignupClick={handleFlip} />
+            <LoginForm onSignupClick={handleFlip} onSuccess={onClose} />
           ) : (
-            <SignupForm onLoginClick={handleFlip} />
+            <SignupForm onLoginClick={handleFlip} onSuccess={onClose} />
           )}
         </div>
       </div>

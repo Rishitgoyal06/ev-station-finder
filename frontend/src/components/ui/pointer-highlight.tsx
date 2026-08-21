@@ -18,16 +18,24 @@ export function PointerHighlight({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    if (containerRef.current) {
-      const { width, height } = containerRef.current.getBoundingClientRect();
-      setDimensions({ width, height });
-    }
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setDimensions({ width, height });
+    let animationFrameId: number;
+    
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        const roundedWidth = Math.round(width);
+        const roundedHeight = Math.round(height);
+        setDimensions((prev) => {
+          if (prev.width === roundedWidth && prev.height === roundedHeight) return prev;
+          return { width: roundedWidth, height: roundedHeight };
+        });
       }
+    };
+
+    updateDimensions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      animationFrameId = requestAnimationFrame(updateDimensions);
     });
 
     if (containerRef.current) {
@@ -35,6 +43,7 @@ export function PointerHighlight({
     }
 
     return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
       if (containerRef.current) {
         resizeObserver.unobserve(containerRef.current);
       }

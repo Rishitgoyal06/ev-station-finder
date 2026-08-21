@@ -65,7 +65,7 @@ const FieldSeparator = React.forwardRef<
       <span className="w-full border-t" />
     </div>
     <div className="relative flex justify-center text-xs uppercase">
-      <span className="bg-background px-2 text-muted-foreground">
+      <span className="bg-black px-3 text-gray-400 border border-green-500/20 rounded-full">
         {children}
       </span>
     </div>

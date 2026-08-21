@@ -4,10 +4,14 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for, s
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_cors import CORS
 import chat
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
+# Allow requests from any origin (covers local network IPs like 192.168.x.x)
+CORS(app)
 
 # Database Setup
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///users.db')

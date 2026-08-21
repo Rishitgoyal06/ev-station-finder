@@ -90,12 +90,12 @@ def get_greeting(language):
     return greetings.get(language, greetings["en"])
 
 def ev_chat(message, language="en"):
-    # Try Groq with updated model
-    if api_keys:
+    # Try each Groq API key in rotation
+    for i, api_key in enumerate(api_keys):
         try:
-            client = Groq(api_key=api_keys[0])
+            client = Groq(api_key=api_key)
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",  # Updated model
+                model="llama-3.1-8b-instant",
                 messages=[
                     {"role": "system", "content": get_system_prompt(language)},
                     {"role": "user", "content": message}
@@ -105,22 +105,12 @@ def ev_chat(message, language="en"):
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"Groq Error: {e}")
-            # Try second API key
-            if len(api_keys) > 1:
-                try:
-                    client = Groq(api_key=api_keys[1])
-                    response = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
-                        messages=[
-                            {"role": "system", "content": get_system_prompt(language)},
-                            {"role": "user", "content": message}
-                        ],
-                        temperature=0.2,
-                        max_tokens=300
-                    )
-                    return response.choices[0].message.content
-                except Exception as e2:
-                    print(f"Groq Error 2: {e2}")
-    
-    return "API temporarily unavailable. Please try again in a moment."
+            print(f"Groq Key {i+1} Error: {e}")
+            continue
+
+    # Try HuggingFace as final fallback
+    hf_response = huggingface_chat(message, language)
+    if hf_response:
+        return hf_response
+
+    return get_fallback_response(message, language)

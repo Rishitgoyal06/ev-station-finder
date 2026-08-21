@@ -1,15 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
-  try {
-    await fetch('http://localhost:5555/logout', {
-      headers: {
-        cookie: request.headers.get('cookie') || '',
-      },
-      redirect: 'manual',
-    });
-  } catch {
-    // Best effort logout
-  }
-  return NextResponse.json({ ok: true });
+export async function GET() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("chargeiq_token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/",
+  });
+  return res;
+}
+
+export async function POST() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("chargeiq_token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/",
+  });
+  return res;
 }

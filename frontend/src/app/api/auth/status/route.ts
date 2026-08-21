@@ -1,26 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
+import { dbConnect } from "@/lib/dbConnect";
+import User from "@/models/User";
 
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch('http://localhost:5555/', {
-      headers: {
-        // Forward cookies for session-based auth
-        cookie: request.headers.get('cookie') || '',
-      },
-      redirect: 'manual', // Don't follow redirects — a redirect means not authenticated
-    });
+    const token = request.cookies.get("chargeiq_token")?.value ||
+      request.headers.get("authorization")?.replace("Bearer ", "");
 
-    // Flask redirects to /login when not authenticated
-    if (response.status === 302 || response.status === 301) {
+    if (!token) {
       return NextResponse.json({ authenticated: false }, { status: 200 });
     }
 
-    if (response.ok) {
-      return NextResponse.json({ authenticated: true }, { status: 200 });
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ authenticated: false }, { status: 200 });
     }
 
-    return NextResponse.json({ authenticated: false }, { status: 200 });
-  } catch {
+    await dbConnect();
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return NextResponse.json({ authenticated: false }, { status: 200 });
+    }
+
+    return NextResponse.json({
+      authenticated: true,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+      },
+    });
+  } catch (error) {
     return NextResponse.json({ authenticated: false }, { status: 200 });
   }
 }

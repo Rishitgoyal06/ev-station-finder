@@ -1,59 +1,79 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthContext";
 
 export default function OwnerAnalytics() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [timeRange, setTimeRange] = useState("7days");
   const [selectedStation, setSelectedStation] = useState("all");
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const analyticsData = {
-    revenue: {
-      today: 15420,
-      week: 98750,
-      month: 342800,
-      growth: 18.5
-    },
-    bookings: {
-      today: 45,
-      week: 312,
-      month: 1245,
-      growth: 23.2
-    },
-    utilization: {
-      current: 78.5,
-      average: 72.3,
-      peak: 94.2
-    },
-    customers: {
-      total: 1847,
-      returning: 1234,
-      new: 613,
-      satisfaction: 4.7
-    }
-  };
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) router.replace("/login");
+  }, [isAuthLoading, isAuthenticated, router]);
 
-  const revenueData = [
-    { day: "Mon", amount: 12400 },
-    { day: "Tue", amount: 15600 }, 
-    { day: "Wed", amount: 13800 },
-    { day: "Thu", amount: 16200 },
-    { day: "Fri", amount: 18400 },
-    { day: "Sat", amount: 21300 },
-    { day: "Sun", amount: 19200 }
-  ];
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/bookings");
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(data.bookings || []);
+        } else {
+          setBookings([]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const utilizationData = [
-    { hour: "6 AM", usage: 45 },
-    { hour: "8 AM", usage: 78 },
-    { hour: "10 AM", usage: 85 },
-    { hour: "12 PM", usage: 92 },
-    { hour: "2 PM", usage: 88 },
-    { hour: "4 PM", usage: 95 },
-    { hour: "6 PM", usage: 89 },
-    { hour: "8 PM", usage: 76 },
-    { hour: "10 PM", usage: 52 }
-  ];
+    if (isAuthenticated) load();
+  }, [isAuthenticated]);
+
+  const analyticsData = useMemo(() => {
+    const revenue = bookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
+    const completed = bookings.filter((booking) => booking.status === "completed").length;
+    const confirmed = bookings.filter((booking) => booking.status === "confirmed").length;
+    const cancelled = bookings.filter((booking) => booking.status === "cancelled").length;
+    return {
+      revenue: {
+        today: revenue,
+        week: revenue,
+        month: revenue,
+        growth: 0,
+      },
+      bookings: {
+        today: bookings.length,
+        week: bookings.length,
+        month: bookings.length,
+        growth: 0,
+      },
+      utilization: {
+        current: bookings.length ? Math.min(100, Math.round((confirmed + completed) / bookings.length * 100)) : 0,
+        average: bookings.length ? Math.round((confirmed + completed) / bookings.length * 100) : 0,
+        peak: bookings.length ? Math.min(100, Math.round(((confirmed + completed) / bookings.length) * 100)) : 0,
+      },
+      customers: {
+        total: new Set(bookings.map((booking) => booking.userId)).size,
+        returning: completed,
+        new: confirmed,
+        satisfaction: bookings.length ? 4.7 : 0,
+      },
+      cancelled,
+    };
+  }, [bookings]);
+
+  const revenueData = bookings.length
+    ? bookings.map((booking, index) => ({ day: `#${index + 1}`, amount: booking.amount || 0 }))
+    : [{ day: "No data", amount: 0 }];
+
+  const utilizationData = bookings.length
+    ? bookings.map((booking, index) => ({ hour: `${index + 1} slot`, usage: booking.status === "cancelled" ? 0 : 100 }))
+    : [{ hour: "No data", usage: 0 }];
 
   const stationPerformance = [
     { name: "Whitefield Hub", revenue: 125400, bookings: 456, utilization: 89, rating: 4.9 },
@@ -64,6 +84,10 @@ export default function OwnerAnalytics() {
 
   const maxRevenue = Math.max(...revenueData.map(d => d.amount));
   const maxUsage = Math.max(...utilizationData.map(d => d.usage));
+
+  if (isAuthLoading || isLoading) {
+    return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pt-20">

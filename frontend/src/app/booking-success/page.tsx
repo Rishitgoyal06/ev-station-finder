@@ -6,22 +6,20 @@ function BookingSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [countdown, setCountdown] = useState(5);
-
-  // Mock booking data - in real app, fetch using booking ID from searchParams
-  const bookingData = {
-    id: "BK001",
-    stationName: "GreenCharge Hub",
-    address: "MG Road, Bengaluru, Karnataka 560001",
-    date: "2026-08-15",
-    time: "5:30 PM - 6:15 PM",
-    connector: "CCS2",
-    amount: 245,
-    slotNumber: "A3",
-    estimatedCharge: "45 minutes",
-    image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg"
-  };
+  const bookingId = searchParams.get("bookingId");
+  const [bookingData, setBookingData] = useState<any>(null);
 
   useEffect(() => {
+    const loadBooking = async () => {
+      if (!bookingId) return;
+      const res = await fetch(`/api/bookings/${bookingId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookingData(data.booking);
+      }
+    };
+    loadBooking();
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -34,7 +32,21 @@ function BookingSuccessContent() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [router]);
+  }, [router, bookingId]);
+
+  const fallbackBooking = {
+    id: "BK001",
+    stationName: "GreenCharge Hub",
+    address: "MG Road, Bengaluru, Karnataka 560001",
+    date: "2026-08-15",
+    time: "5:30 PM - 6:15 PM",
+    connector: "CCS2",
+    amount: 245,
+    slotNumber: "A3",
+    estimatedCharge: "45 minutes",
+    image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg"
+  };
+  const activeBooking = bookingData ?? fallbackBooking;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-4">
@@ -54,37 +66,37 @@ function BookingSuccessContent() {
         <div className="bg-[#111] border border-[#1a1a1a] rounded-2xl p-6 mb-8">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 bg-[#1f1f1f] rounded-lg overflow-hidden">
-              <img src={bookingData.image} alt={bookingData.stationName} className="w-full h-full object-cover"/>
+              <img src={activeBooking.image} alt={activeBooking.stationName} className="w-full h-full object-cover"/>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">{bookingData.stationName}</h3>
-              <p className="text-sm text-gray-400">{bookingData.address}</p>
+              <h3 className="text-lg font-bold text-white">{activeBooking.stationName}</h3>
+              <p className="text-sm text-gray-400">{activeBooking.address}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-3">
               <p className="text-xs text-gray-500 mb-1">Booking ID</p>
-              <p className="text-white font-semibold">{bookingData.id}</p>
+              <p className="text-white font-semibold">{activeBooking.id}</p>
             </div>
             <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-3">
               <p className="text-xs text-gray-500 mb-1">Slot Number</p>
-              <p className="text-green-400 font-semibold">{bookingData.slotNumber}</p>
+              <p className="text-green-400 font-semibold">{activeBooking.slotNumber}</p>
             </div>
             <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-3">
               <p className="text-xs text-gray-500 mb-1">Date & Time</p>
-              <p className="text-white font-semibold">{bookingData.date}</p>
-              <p className="text-xs text-gray-400">{bookingData.time}</p>
+              <p className="text-white font-semibold">{activeBooking.date}</p>
+              <p className="text-xs text-gray-400">{activeBooking.time}</p>
             </div>
             <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-3">
               <p className="text-xs text-gray-500 mb-1">Connector</p>
-              <p className="text-white font-semibold">{bookingData.connector}</p>
+              <p className="text-white font-semibold">{activeBooking.connector}</p>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-[#1a1a1a]">
             <span className="text-gray-400">Total Amount Paid</span>
-            <span className="text-2xl font-bold text-green-400">₹{bookingData.amount}</span>
+            <span className="text-2xl font-bold text-green-400">₹{activeBooking.amount}</span>
           </div>
         </div>
 
@@ -98,9 +110,9 @@ function BookingSuccessContent() {
               <h4 className="text-blue-400 font-semibold mb-2">Next Steps</h4>
               <ul className="text-sm text-gray-300 space-y-1">
                 <li>• Arrive at the station 5 minutes before your slot time</li>
-                <li>• Park your vehicle in slot {bookingData.slotNumber}</li>
+                <li>• Park your vehicle in slot {activeBooking.slotNumber}</li>
                 <li>• Use the ChargeIQ app to start charging</li>
-                <li>• Your slot is reserved for {bookingData.estimatedCharge}</li>
+                <li>• Your slot is reserved for {activeBooking.estimatedCharge}</li>
               </ul>
             </div>
           </div>
@@ -109,7 +121,7 @@ function BookingSuccessContent() {
         {/* Action Buttons */}
         <div className="space-y-3">
           <button 
-            onClick={() => router.push(`/bookings/${bookingData.id}`)}
+            onClick={() => router.push(`/bookings/${activeBooking.id}`)}
             className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 text-black px-6 py-4 rounded-xl font-semibold transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>

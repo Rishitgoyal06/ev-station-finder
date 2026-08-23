@@ -1,52 +1,63 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthContext";
 
-const mockBookings = [
-  {
-    id: "BK001",
-    stationName: "GreenCharge Hub",
-    address: "MG Road, Bengaluru, Karnataka",
-    date: "2026-08-15",
-    time: "5:30 PM - 6:15 PM",
-    connector: "CCS2",
-    amount: 245,
-    status: "confirmed",
-    image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg"
-  },
-  {
-    id: "BK002", 
-    stationName: "VoltSpark Center",
-    address: "Whitefield, Bengaluru, Karnataka",
-    date: "2026-08-12",
-    time: "2:00 PM - 2:45 PM", 
-    connector: "Type 2",
-    amount: 180,
-    status: "completed",
-    image: "/WhatsApp Image 2026-03-31 at 8.25.52 PM.jpeg"
-  },
-  {
-    id: "BK003",
-    stationName: "ChargeIQ Station",
-    address: "Electronic City, Bengaluru, Karnataka", 
-    date: "2026-08-10",
-    time: "11:30 AM - 12:15 PM",
-    connector: "CCS2", 
-    amount: 220,
-    status: "cancelled",
-    image: "/WhatsApp Image 2026-03-31 at 9.25.26 PM (1).jpeg"
-  }
-];
+type Booking = {
+  id: string;
+  stationName: string;
+  address: string;
+  date: string;
+  time: string;
+  connector: string;
+  amount: number;
+  status: "confirmed" | "completed" | "cancelled";
+};
 
 export default function MyBookingsPage() {
   const [activeTab, setActiveTab] = useState("all");
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
-  const filteredBookings = mockBookings.filter(booking => {
-    if (activeTab === "all") return true;
-    if (activeTab === "upcoming") return booking.status === "confirmed";
-    if (activeTab === "completed") return booking.status === "completed"; 
-    if (activeTab === "cancelled") return booking.status === "cancelled";
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) router.replace("/");
+  }, [isAuthLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/bookings");
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(data.bookings || []);
+        } else {
+          setBookings([]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchBookings();
+    }
+  }, [isAuthenticated]);
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen bg-[#0a0a0a] items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  const filtered = bookings.filter((b) => {
+    if (activeTab === "upcoming") return b.status === "confirmed";
+    if (activeTab === "completed") return b.status === "completed";
+    if (activeTab === "cancelled") return b.status === "cancelled";
     return true;
   });
 
@@ -58,6 +69,17 @@ export default function MyBookingsPage() {
       default: return "text-gray-400 bg-gray-500/10 border-gray-500/20";
     }
   };
+
+  const totalSpent = bookings
+    .filter((b) => b.status === "completed")
+    .reduce((sum, b) => sum + b.amount, 0);
+
+  const stats = [
+    { label: "Total Bookings", value: bookings.length, color: "text-white", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", iconBg: "bg-blue-500/10", iconColor: "text-blue-400" },
+    { label: "Upcoming", value: bookings.filter((b) => b.status === "confirmed").length, color: "text-green-400", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", iconBg: "bg-green-500/10", iconColor: "text-green-400" },
+    { label: "Completed", value: bookings.filter((b) => b.status === "completed").length, color: "text-blue-400", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", iconBg: "bg-blue-500/10", iconColor: "text-blue-400" },
+    { label: "Total Spent", value: `₹${totalSpent}`, color: "text-white", icon: "M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z", iconBg: "bg-yellow-500/10", iconColor: "text-yellow-400" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pt-20">
@@ -77,80 +99,38 @@ export default function MyBookingsPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Total Bookings</p>
-                <p className="text-2xl font-bold text-white">3</p>
-              </div>
-              <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Upcoming</p>
-                <p className="text-2xl font-bold text-green-400">1</p>
-              </div>
-              <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
-                </svg>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">{s.label}</p>
+                  <p className={`text-2xl font-bold ${s.color}`}>{isLoading ? "—" : s.value}</p>
+                </div>
+                <div className={`w-10 h-10 ${s.iconBg} rounded-lg flex items-center justify-center`}>
+                  <svg className={`w-5 h-5 ${s.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path d={s.icon}/>
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Completed</p>
-                <p className="text-2xl font-bold text-blue-400">1</p>
-              </div>
-              <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Total Spent</p>
-                <p className="text-2xl font-bold text-white">₹645</p>
-              </div>
-              <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Filter Tabs */}
+        {/* Tabs */}
         <div className="flex gap-2 mb-6 bg-[#111] border border-[#1a1a1a] rounded-xl p-1">
           {[
             { key: "all", label: "All Bookings" },
-            { key: "upcoming", label: "Upcoming" }, 
+            { key: "upcoming", label: "Upcoming" },
             { key: "completed", label: "Completed" },
-            { key: "cancelled", label: "Cancelled" }
+            { key: "cancelled", label: "Cancelled" },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? "bg-green-500 text-black"
-                  : "text-gray-400 hover:text-white hover:bg-[#1f1f1f]"
+                activeTab === tab.key ? "bg-green-500 text-black" : "text-gray-400 hover:text-white hover:bg-[#1f1f1f]"
               }`}
             >
               {tab.label}
@@ -158,93 +138,89 @@ export default function MyBookingsPage() {
           ))}
         </div>
 
-        {/* Bookings List */}
-        <div className="space-y-4">
-          {filteredBookings.map((booking) => (
-            <div key={booking.id} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                {/* Station Image */}
-                <div className="w-16 h-16 bg-[#1f1f1f] rounded-lg overflow-hidden flex-shrink-0">
-                  <img src={booking.image} alt={booking.stationName} className="w-full h-full object-cover"/>
-                </div>
-
-                {/* Booking Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-1">{booking.stationName}</h3>
-                      <p className="text-sm text-gray-400">{booking.address}</p>
+        {/* Content */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6 animate-pulse">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-[#1f1f1f] rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-5 bg-[#1f1f1f] rounded w-1/3" />
+                    <div className="h-3 bg-[#1f1f1f] rounded w-1/2" />
+                    <div className="grid grid-cols-4 gap-4 mt-4">
+                      {[1,2,3,4].map(i => <div key={i} className="h-8 bg-[#1f1f1f] rounded" />)}
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Booking ID</p>
-                      <p className="text-sm font-medium text-white">{booking.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Date & Time</p>
-                      <p className="text-sm font-medium text-white">{booking.date}</p>
-                      <p className="text-xs text-gray-400">{booking.time}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Connector</p>
-                      <p className="text-sm font-medium text-white">{booking.connector}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Amount</p>
-                      <p className="text-sm font-bold text-green-400">₹{booking.amount}</p>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#1a1a1a]">
-                    <button onClick={() => router.push(`/bookings/${booking.id}`)} className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm font-medium transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                      </svg>
-                      View Details
-                    </button>
-                    
-                    {booking.status === "confirmed" && (
-                      <button className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>
-                        </svg>
-                        Cancel Booking
-                      </button>
-                    )}
-
-                    {booking.status === "completed" && (
-                      <button className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 rounded-lg text-sm font-medium transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                        </svg>
-                        Write Review
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredBookings.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-[#111] rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-24 h-24 bg-[#111] rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No Bookings Found</h3>
-            <p className="text-gray-400 mb-6">You don't have any bookings in this category yet.</p>
-            <button onClick={() => router.push('/stations')} className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-xl font-semibold transition-colors">
+            <h3 className="text-lg font-semibold text-white mb-2">No Bookings Yet</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              {activeTab === "all"
+                ? "You haven't made any bookings. Find a nearby station and charge up!"
+                : `No ${activeTab} bookings found.`}
+            </p>
+            <button
+              onClick={() => router.push("/stations")}
+              className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-xl font-semibold transition-colors"
+            >
               Find Stations
             </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filtered.map((booking) => (
+              <div key={booking.id} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-[#1f1f1f] rounded-lg flex-shrink-0 flex items-center justify-center">
+                    <svg className="w-7 h-7 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-1">{booking.stationName}</h3>
+                        <p className="text-sm text-gray-400">{booking.address}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(booking.status)}`}>
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                      <div><p className="text-xs text-gray-500 mb-1">Booking ID</p><p className="text-sm font-medium">{booking.id}</p></div>
+                      <div><p className="text-xs text-gray-500 mb-1">Date & Time</p><p className="text-sm font-medium">{booking.date}</p><p className="text-xs text-gray-400">{booking.time}</p></div>
+                      <div><p className="text-xs text-gray-500 mb-1">Connector</p><p className="text-sm font-medium">{booking.connector}</p></div>
+                      <div><p className="text-xs text-gray-500 mb-1">Amount</p><p className="text-sm font-bold text-green-400">₹{booking.amount}</p></div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#1a1a1a]">
+                      <button className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm font-medium transition-colors">
+                        View Details
+                      </button>
+                      {booking.status === "confirmed" && (
+                        <button className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors">
+                          Cancel Booking
+                        </button>
+                      )}
+                      {booking.status === "completed" && (
+                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 rounded-lg text-sm font-medium transition-colors">
+                          Write Review
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

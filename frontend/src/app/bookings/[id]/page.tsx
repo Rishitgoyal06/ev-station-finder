@@ -1,33 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-
-const mockBooking = {
-  id: "BK001",
-  stationName: "GreenCharge Hub",
-  address: "MG Road, Bengaluru, Karnataka 560001",
-  date: "2026-08-15",
-  time: "5:30 PM - 6:15 PM",
-  connector: "CCS2",
-  amount: 245,
-  status: "confirmed",
-  image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg",
-  phone: "+91 98765 43210",
-  email: "support@greencharge.com",
-  coordinates: { lat: 12.9716, lng: 77.5946 },
-  bookedAt: "2026-08-14 10:30 AM",
-  paymentMethod: "UPI",
-  transactionId: "TXN123456789",
-  vehicleInfo: "Tesla Model 3 - KA01AB1234",
-  estimatedCharge: "45 minutes",
-  energyEstimate: "25 kWh",
-  instructions: "Park in slot #3. Use the ChargeIQ app to start charging."
-};
+import { useAuth } from "@/components/AuthContext";
 
 export default function BookingDetailsPage() {
   const router = useRouter();
   const params = useParams();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [booking, setBooking] = useState<any>(null);
+  const id = String(params?.id ?? "");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -37,6 +19,32 @@ export default function BookingDetailsPage() {
       default: return "text-gray-400 bg-gray-500/10 border-gray-500/20";
     }
   };
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/");
+      return;
+    }
+
+    const loadBooking = async () => {
+      if (!id) return;
+      const res = await fetch(`/api/bookings/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBooking(data.booking);
+      }
+    };
+
+    loadBooking();
+  }, [id, isAuthLoading, isAuthenticated, router]);
+
+  if (isAuthLoading || !booking) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pt-20">
@@ -51,11 +59,11 @@ export default function BookingDetailsPage() {
             </button>
             <div>
               <h1 className="text-xl font-bold">Booking Details</h1>
-              <p className="text-sm text-gray-400">Booking ID: {mockBooking.id}</p>
+              <p className="text-sm text-gray-400">Booking ID: {booking.id}</p>
             </div>
           </div>
-          <span className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(mockBooking.status)}`}>
-            {mockBooking.status.charAt(0).toUpperCase() + mockBooking.status.slice(1)}
+          <span className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(booking.status)}`}>
+            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
           </span>
         </div>
       </div>
@@ -68,16 +76,16 @@ export default function BookingDetailsPage() {
             <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6">
               <div className="flex items-start gap-4">
                 <div className="w-20 h-20 bg-[#1f1f1f] rounded-lg overflow-hidden flex-shrink-0">
-                  <img src={mockBooking.image} alt={mockBooking.stationName} className="w-full h-full object-cover"/>
+                  <img src={booking.image} alt={booking.stationName} className="w-full h-full object-cover"/>
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white mb-2">{mockBooking.stationName}</h2>
+                  <h2 className="text-xl font-bold text-white mb-2">{booking.stationName}</h2>
                   <p className="text-gray-400 mb-3 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6z"/>
                       <circle cx="12" cy="8" r="2"/>
                     </svg>
-                    {mockBooking.address}
+                    {booking.address}
                   </p>
                   <div className="flex items-center gap-4">
                     <button className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg text-sm font-medium transition-colors hover:bg-blue-500/20">
@@ -109,7 +117,7 @@ export default function BookingDetailsPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-white font-medium">Booking Confirmed</p>
-                    <p className="text-sm text-gray-400">{mockBooking.bookedAt}</p>
+                    <p className="text-sm text-gray-400">{booking.bookedAt}</p>
                   </div>
                 </div>
                 
@@ -121,7 +129,7 @@ export default function BookingDetailsPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-white font-medium">Scheduled Charging</p>
-                    <p className="text-sm text-gray-400">{mockBooking.date} at {mockBooking.time}</p>
+                    <p className="text-sm text-gray-400">{booking.date} at {booking.time}</p>
                   </div>
                 </div>
 
@@ -145,15 +153,15 @@ export default function BookingDetailsPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4">
                   <p className="text-xs text-gray-500 mb-1">Connector Type</p>
-                  <p className="text-lg font-semibold text-white">{mockBooking.connector}</p>
+                  <p className="text-lg font-semibold text-white">{booking.connector}</p>
                 </div>
                 <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4">
                   <p className="text-xs text-gray-500 mb-1">Duration</p>
-                  <p className="text-lg font-semibold text-white">{mockBooking.estimatedCharge}</p>
+                  <p className="text-lg font-semibold text-white">{booking.estimatedCharge}</p>
                 </div>
                 <div className="bg-[#161616] border border-[#2a2a2a] rounded-lg p-4">
                   <p className="text-xs text-gray-500 mb-1">Energy Estimate</p>
-                  <p className="text-lg font-semibold text-white">{mockBooking.energyEstimate}</p>
+                  <p className="text-lg font-semibold text-white">{booking.energyEstimate || "25 kWh"}</p>
                 </div>
               </div>
               
@@ -164,7 +172,7 @@ export default function BookingDetailsPage() {
                   </svg>
                   <div>
                     <p className="text-blue-400 font-medium text-sm">Charging Instructions</p>
-                    <p className="text-gray-300 text-sm mt-1">{mockBooking.instructions}</p>
+                    <p className="text-gray-300 text-sm mt-1">{booking.instructions}</p>
                   </div>
                 </div>
               </div>
@@ -200,11 +208,11 @@ export default function BookingDetailsPage() {
               <div className="mt-4 pt-4 border-t border-[#1a1a1a]">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-400 text-sm">Payment Method</span>
-                  <span className="text-white text-sm">{mockBooking.paymentMethod}</span>
+                    <span className="text-white text-sm">{booking.paymentMethod}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400 text-sm">Transaction ID</span>
-                  <span className="text-white text-sm font-mono">{mockBooking.transactionId}</span>
+                    <span className="text-white text-sm font-mono">{booking.transactionId}</span>
                 </div>
               </div>
             </div>
@@ -219,7 +227,7 @@ export default function BookingDetailsPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-white font-medium">{mockBooking.vehicleInfo}</p>
+                  <p className="text-white font-medium">{booking.vehicleInfo}</p>
                   <p className="text-gray-400 text-sm">Electric Vehicle</p>
                 </div>
               </div>
@@ -227,7 +235,7 @@ export default function BookingDetailsPage() {
 
             {/* Actions */}
             <div className="space-y-3">
-              {mockBooking.status === "confirmed" && (
+              {booking.status === "confirmed" && (
                 <button 
                   onClick={() => setShowCancelModal(true)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl font-semibold transition-colors"

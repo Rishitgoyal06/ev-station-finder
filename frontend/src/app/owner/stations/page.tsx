@@ -27,7 +27,7 @@ export default function OwnerStationsPage() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("http://localhost:8001/ev-stations?lat=22.3072&lng=73.1812&radius=30000");
+        const res = await fetch("http://localhost:8000/ev-stations?lat=22.3072&lng=73.1812&radius=30000");
         const data = await res.json();
         setStations(data.results || []);
       } catch {

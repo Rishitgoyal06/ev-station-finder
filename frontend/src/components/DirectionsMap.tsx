@@ -124,7 +124,7 @@ export default function DirectionsMap({
         </div>
       `);
 
-    fetch(`http://localhost:8001/directions?origin_lat=${userLocation[0]}&origin_lng=${userLocation[1]}&dest_lat=${stationLocation[0]}&dest_lng=${stationLocation[1]}&route_type=fastest`)
+    fetch(`http://localhost:8000/directions?origin_lat=${userLocation[0]}&origin_lng=${userLocation[1]}&dest_lat=${stationLocation[0]}&dest_lng=${stationLocation[1]}&route_type=fastest`)
       .then(res => res.json())
       .then(data => {
         if (!mapInstanceRef.current) return;

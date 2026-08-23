@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routes import system, stations, directions
+from app.routes import system, stations, directions, auth, bookings, slots, admin
 
 app = FastAPI(title="Charge IQ - EV Backend")
 
@@ -17,3 +17,7 @@ app.add_middleware(
 app.include_router(system.router)
 app.include_router(stations.router)
 app.include_router(directions.router)
+app.include_router(auth.router)
+app.include_router(bookings.router)
+app.include_router(slots.router)
+app.include_router(admin.router)

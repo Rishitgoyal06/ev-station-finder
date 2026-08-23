@@ -132,7 +132,7 @@ export default function MapComponent() {
 
     const loadStations = async () => {
       try {
-        const res = await fetch(`http://localhost:8001/ev-stations?lat=20.5937&lng=78.9629&radius=2000000`);
+        const res = await fetch(`http://localhost:8000/ev-stations?lat=20.5937&lng=78.9629&radius=2000000`);
         const data = await res.json();
         const results = data.results || [];
         

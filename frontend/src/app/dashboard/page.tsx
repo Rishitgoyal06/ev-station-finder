@@ -86,7 +86,7 @@ export default function DashboardPage() {
     const fetchStations = async (lat: number, lng: number) => {
       setIsStationsLoading(true);
       try {
-        const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
+        const res = await fetch(`http://localhost:8000/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
         const data = await res.json();
         
         if (data.results && data.results.length > 0) {

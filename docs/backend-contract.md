@@ -14,13 +14,13 @@ This app is set up so the Next.js frontend owns routing and UI, while the Python
 Set one of these in `frontend/.env.local`:
 
 ```env
-BACKEND_BASE_URL=http://localhost:8001
+BACKEND_BASE_URL=http://localhost:8000
 ```
 
 or
 
 ```env
-NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8001
+NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8000
 ```
 
 ## Required Endpoints

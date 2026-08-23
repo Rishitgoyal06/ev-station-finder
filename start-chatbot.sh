@@ -12,7 +12,7 @@ if ! command -v python3 &> /dev/null; then
 fi
 
 # Navigate to ChatBot directory
-cd ChatBot
+cd "$(dirname "$0")/ChatBot"
 
 # Check if virtual environment exists, if not create one
 if [ ! -d "venv" ]; then

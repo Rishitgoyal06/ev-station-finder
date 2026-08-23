@@ -58,6 +58,7 @@ export default function StationDetailPage() {
   const [date, setDate]           = useState("Today");
   const [time, setTime]           = useState("5:30 PM");
   const [imgIdx, setImgIdx]       = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalCost = Math.round(parseFloat(station.energy) * station.price);
 
   // Generate available time slots based on current time and selected date
@@ -96,6 +97,9 @@ export default function StationDetailPage() {
   };
 
   const availableTimeSlots = generateTimeSlots();
+  const selectedConnector = station.connectors.find((c) => c.id === connector) ?? station.connectors[0];
+  const bookingDate = date === "Today" ? new Date().toISOString().slice(0, 10) : date === "Tomorrow" ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : new Date(Date.now() + 172800000).toISOString().slice(0, 10);
+  const slotNumber = `A${station.id}`;
 
   useEffect(() => { 
     if (!isAuthenticated) router.replace("/"); 
@@ -370,11 +374,42 @@ export default function StationDetailPage() {
 
             {/* Pay button */}
             <button 
-              onClick={() => router.push('/booking-success')}
-              className="w-full flex items-center justify-between bg-green-500 hover:bg-green-400 active:bg-green-600 text-black font-bold px-5 py-4 rounded-xl transition-colors text-[15px]"
+              disabled={isSubmitting}
+              onClick={async () => {
+                setIsSubmitting(true);
+                try {
+                  const res = await fetch("/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      stationName: station.name,
+                      address: `${station.address}, ${station.city}`,
+                      date: bookingDate,
+                      time,
+                      connector: selectedConnector.name,
+                      amount: totalCost,
+                      slotNumber,
+                      estimatedCharge: station.chargeTime,
+                      image: station.img,
+                      vehicleInfo: "Tesla Model 3 - KA01AB1234",
+                      paymentMethod: "UPI",
+                      transactionId: `TXN${Date.now()}`,
+                      instructions: `Park in slot ${slotNumber}. Use the ChargeIQ app to start charging.`,
+                    }),
+                  });
+
+                  const data = await res.json();
+                  if (res.ok && data.booking?.id) {
+                    router.push(`/booking-success?bookingId=${data.booking.id}`);
+                  }
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="w-full flex items-center justify-between bg-green-500 hover:bg-green-400 active:bg-green-600 disabled:bg-green-500/50 text-black font-bold px-5 py-4 rounded-xl transition-colors text-[15px]"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-              Pay &amp; Confirm
+              {isSubmitting ? "Confirming..." : "Pay &amp; Confirm"}
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbConnect } from "@/lib/dbConnect";
+
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/auth";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await dbConnect();
+
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {

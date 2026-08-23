@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbConnect } from "@/lib/dbConnect";
+
 import User from "@/models/User";
 import { signToken } from "@/lib/auth";
 import { OAuth2Client } from "google-auth-library";
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await dbConnect();
+
 
     // Check if user exists by email or googleId
     let user = await User.findOne({

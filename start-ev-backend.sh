@@ -34,7 +34,7 @@ if [ ! -f ".env" ]; then
     echo "Please create one with your API keys."
     echo "Example .env content:"
     echo "GOOGLE_MAPS_API_KEY=your_google_api_key_here"
-    echo "MONGO_URI=mongodb://localhost:27017/ev_stations"
+
     echo "JWT_SECRET=your-super-secret-jwt-key-here"
     exit 1
 fi

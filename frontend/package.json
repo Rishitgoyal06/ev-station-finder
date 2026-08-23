@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "chatbot": "../start-chatbot.bat",
-    "ev-backend": "../start-ev-backend.bat",
+    "chatbot": "bash ../start-chatbot.sh",
+    "ev-backend": "bash ../start-ev-backend.sh",
     "dev:full": "concurrently \"npm run dev\" \"npm run chatbot\"",
     "dev:complete": "concurrently \"npm run dev\" \"npm run chatbot\" \"npm run ev-backend\""
   },
@@ -27,7 +27,6 @@
     "leaflet.markercluster": "^1.5.3",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.562.0",
-    "mongoose": "^9.9.3",
     "motion": "^12.23.26",
     "next": "16.1.1",
     "react": "19.2.3",

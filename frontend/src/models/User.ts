@@ -1,54 +1,27 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+let users: any[] = [];
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  password?: string;
-  googleId?: string;
-  avatar?: string;
-  role: "user" | "station_owner" | "worker" | "admin";
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const UserSchema: Schema<IUser> = new Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Name is required"],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      select: false,
-    },
-    googleId: {
-      type: String,
-      default: null,
-    },
-    avatar: {
-      type: String,
-      default: "",
-    },
-    role: {
-      type: String,
-      enum: ["user", "station_owner", "worker", "admin"],
-      default: "user",
-    },
+const User = {
+  findOne: async (query: any) => {
+    let identifier = "";
+    if (query.email) identifier = query.email;
+    if (query.$or) {
+      identifier = query.$or[0].email || query.$or[1].name || "";
+    }
+    const user = users.find(u => (u.email && u.email.toLowerCase() === identifier.toLowerCase()) || (u.name && u.name.toLowerCase() === identifier.toLowerCase()));
+    if (!user) return null;
+    return {
+      ...user,
+      select: function(fields: string) { return this; }
+    };
   },
-  {
-    timestamps: true,
+  findById: async (id: string) => {
+    return users.find(u => u._id === id);
+  },
+  create: async (data: any) => {
+    const newUser = { ...data, _id: Math.random().toString(36).substring(7) };
+    users.push(newUser);
+    return newUser;
   }
-);
-
-// Reuse model if compiled already, otherwise compile
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+};
 
 export default User;

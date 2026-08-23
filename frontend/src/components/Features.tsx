@@ -336,7 +336,7 @@ export default function Features() {
                 {[
                   { category: "Frontend", tech: "Next.js, React, TypeScript" },
                   { category: "Backend", tech: "FastAPI, Flask, Python" },
-                  { category: "Database", tech: "MongoDB, Redis Cache" },
+                  { category: "Database", tech: "Redis Cache" },
                   { category: "APIs", tech: "Google Maps, Places API" },
                   {
                     category: "AI/ML",

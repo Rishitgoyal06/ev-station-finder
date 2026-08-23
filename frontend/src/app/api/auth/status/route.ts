@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
-import { dbConnect } from "@/lib/dbConnect";
+
 import User from "@/models/User";
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ authenticated: false }, { status: 200 });
     }
 
-    await dbConnect();
+
     const user = await User.findById(decoded.userId);
 
     if (!user) {

@@ -6,11 +6,8 @@ import dynamic from "next/dynamic";
 
 const DashboardMap = dynamic(() => import("@/components/DashboardMap"), { ssr: false });
 
-const nearbyStations = [
-  { id: 1, name: "GreenCharge Hub",  distance: "2.1 km", type: "DC Fast Charger", available: 3, total: 5, price: 18 },
-  { id: 2, name: "VoltSpark Center",  distance: "3.8 km", type: "AC Charger",      available: 1, total: 4, price: 12 },
-  { id: 3, name: "ChargeIQ Station", distance: "5.2 km", type: "DC Fast Charger", available: 0, total: 3, price: 20 },
-];
+// Fallback mock data
+const fallbackStations: any[] = [];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -66,33 +63,110 @@ const IconArrow = () => (
 );
 
 export default function DashboardPage() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [battery, setBattery] = useState(28);
   const [location, setLocation] = useState("Detecting...");
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stationsList, setStationsList] = useState<any[]>(fallbackStations);
+  const [isStationsLoading, setIsStationsLoading] = useState(true);
+  const [summary, setSummary] = useState<{
+    totalBookings: number;
+    activeBookings: number;
+    totalRevenue: number;
+    availableSlots: number;
+  } | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace("/");
-  }, [isAuthenticated, router]);
+    if (!isAuthLoading && !isAuthenticated) router.replace("/");
+  }, [isAuthLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (!navigator.geolocation) { setLocation("Vadodara"); return; }
+    const fetchStations = async (lat: number, lng: number) => {
+      setIsStationsLoading(true);
+      try {
+        const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+          const mapped = data.results.slice(0, 5).map((s: any, i: number) => {
+            // Generate deterministic mock stats for chargers based on name length
+            const seed = s.name.length + i;
+            const isDC = seed % 2 === 0;
+            const total = (seed % 4) + 2;
+            const available = s.open_now ? (seed % total) : 0;
+            return {
+              id: s.place_id || i.toString(),
+              name: s.name,
+              distance: s.distance_str || "Nearby",
+              type: isDC ? "DC Fast Charger" : "AC Charger",
+              available: available,
+              total: total,
+              price: 12 + (seed % 10)
+            };
+          });
+          setStationsList(mapped);
+        } else {
+          setStationsList([]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch UI stations", e);
+        setStationsList([]);
+      } finally {
+        setIsStationsLoading(false);
+      }
+    };
+
+    if (!navigator.geolocation) { 
+      setLocation("Vadodara"); 
+      fetchStations(22.3072, 73.1812);
+      return; 
+    }
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
+        fetchStations(coords.latitude, coords.longitude);
         try {
           const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`);
           const d = await r.json();
           setLocation(d.address?.suburb || d.address?.county || d.address?.city || d.address?.town || "Your Location");
         } catch { setLocation("Your Location"); }
       },
-      () => setLocation("Vadodara")
+      () => {
+        setLocation("Vadodara");
+        fetchStations(22.3072, 73.1812);
+      }
     );
   }, []);
 
+  useEffect(() => {
+    const loadSummary = async () => {
+      try {
+        const res = await fetch("/api/summary");
+        if (res.ok) {
+          const data = await res.json();
+          setSummary({
+            totalBookings: data.totalBookings || 0,
+            activeBookings: data.activeBookings || 0,
+            totalRevenue: data.totalRevenue || 0,
+            availableSlots: data.availableSlots || 0,
+          });
+        }
+      } catch {
+        setSummary(null);
+      }
+    };
+
+    if (isAuthenticated) loadSummary();
+  }, [isAuthenticated]);
+
   const handleLogout = async () => { await logout(); router.replace("/"); };
 
+  if (isAuthLoading) {
+    return <div className="flex h-screen bg-[#0a0a0a] items-center justify-center text-green-400">
+      <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
+    </div>;
+  }
   if (!isAuthenticated) return null;
 
   const displayName = typeof user === "string" ? user : user?.name || "Driver";
@@ -284,6 +358,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* ── Live Summary ── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Bookings", value: summary?.totalBookings ?? "—", color: "text-green-400" },
+              { label: "Active", value: summary?.activeBookings ?? "—", color: "text-blue-400" },
+              { label: "Revenue", value: `₹${summary?.totalRevenue ?? 0}`, color: "text-emerald-400" },
+              { label: "Open Slots", value: summary?.availableSlots ?? "—", color: "text-yellow-400" },
+            ].map((item) => (
+              <div key={item.label} className="bg-[#111] border border-[#1f1f1f] rounded-xl p-4">
+                <p className="text-[10px] uppercase tracking-widest text-[#555] mb-1">{item.label}</p>
+                <p className={`text-2xl font-black ${item.color}`}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+
           {/* ── Map ── */}
           <div className="bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden relative">
             <div className="h-[200px] sm:h-[260px]">
@@ -298,56 +387,76 @@ export default function DashboardPage() {
               <button onClick={() => router.push("/stations")} className="text-[11px] text-green-400 hover:text-green-300 transition-colors">View All</button>
             </div>
             <div className="space-y-2">
-              {nearbyStations.map((s) => {
-                const avail = s.available === 0 ? "text-red-400" : s.available <= 1 ? "text-yellow-400" : "text-green-400";
-                const availLabel = s.available === 0 ? "Full" : "Ready";
-                const typeColor = s.type.includes("DC") ? "text-green-400" : "text-blue-400";
-                return (
-                  <div key={s.id} className="bg-[#111] border border-[#1f1f1f] rounded-xl px-4 py-3 flex items-center gap-3">
-                    {/* Icon */}
-                    <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center text-green-400 flex-shrink-0">
-                      <IconBolt />
+              {isStationsLoading ? (
+                // Loading Skeleton
+                [1, 2, 3].map((n) => (
+                  <div key={n} className="bg-[#111] border border-[#1f1f1f] rounded-xl px-4 py-3 flex items-center gap-3 animate-pulse">
+                    <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] flex-shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="h-3.5 bg-[#1a1a1a] rounded w-1/3" />
+                      <div className="h-2.5 bg-[#1a1a1a] rounded w-1/4" />
                     </div>
-
-                    {/* Name + type */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-[13px] font-semibold leading-tight">{s.name}</p>
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#555] mt-0.5">
-                        <span>{s.distance}</span>
-                        <span>•</span>
-                        <span className={`${typeColor} font-medium`}>⚡ {s.type}</span>
-                      </div>
+                    <div className="hidden sm:flex flex-col items-end gap-2">
+                      <div className="h-2 bg-[#1a1a1a] rounded w-12" />
+                      <div className="h-3 bg-[#1a1a1a] rounded w-16" />
                     </div>
-
-                    {/* Availability */}
-                    <div className="hidden sm:flex flex-col items-end text-right">
-                      <span className="text-[10px] text-[#555] font-medium">Availability</span>
-                      <span className={`text-[11px] font-semibold ${avail}`}>
-                        {s.available}/{s.total} {availLabel}
-                      </span>
-                    </div>
-
-                    {/* Price */}
-                    <div className="hidden sm:flex flex-col items-end text-right ml-4">
-                      <span className="text-[10px] text-[#555] font-medium">Price</span>
-                      <span className="text-[11px] font-semibold text-white">₹{s.price}/kWh</span>
-                    </div>
-
-                    {/* Book button */}
-                    <button
-                      onClick={() => s.available > 0 && router.push(`/stations/${s.id}`)}
-                      disabled={s.available === 0}
-                      className={`ml-3 px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors flex-shrink-0 ${
-                        s.available === 0
-                          ? "bg-[#1a1a1a] text-[#444] cursor-not-allowed border border-[#2a2a2a]"
-                          : "bg-white hover:bg-gray-100 text-black"
-                      }`}
-                    >
-                      Book
-                    </button>
+                    <div className="ml-3 w-16 h-7 bg-[#1a1a1a] rounded-lg" />
                   </div>
-                );
-              })}
+                ))
+              ) : stationsList.length === 0 ? (
+                <div className="text-center py-8 text-[#555] text-sm">No stations found nearby</div>
+              ) : (
+                stationsList.map((s) => {
+                  const avail = s.available === 0 ? "text-red-400" : s.available <= 1 ? "text-yellow-400" : "text-green-400";
+                  const availLabel = s.available === 0 ? "Full" : "Ready";
+                  const typeColor = s.type.includes("DC") ? "text-green-400" : "text-blue-400";
+                  return (
+                    <div key={s.id} className="bg-[#111] border border-[#1f1f1f] rounded-xl px-4 py-3 flex items-center gap-3">
+                      {/* Icon */}
+                      <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center text-green-400 flex-shrink-0">
+                        <IconBolt />
+                      </div>
+
+                      {/* Name + type */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-[13px] font-semibold leading-tight">{s.name}</p>
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#555] mt-0.5">
+                          <span>{s.distance}</span>
+                          <span>•</span>
+                          <span className={`${typeColor} font-medium`}>⚡ {s.type}</span>
+                        </div>
+                      </div>
+
+                      {/* Availability */}
+                      <div className="hidden sm:flex flex-col items-end text-right">
+                        <span className="text-[10px] text-[#555] font-medium">Availability</span>
+                        <span className={`text-[11px] font-semibold ${avail}`}>
+                          {s.available}/{s.total} {availLabel}
+                        </span>
+                      </div>
+
+                      {/* Price */}
+                      <div className="hidden sm:flex flex-col items-end text-right ml-4">
+                        <span className="text-[10px] text-[#555] font-medium">Price</span>
+                        <span className="text-[11px] font-semibold text-white">₹{s.price}/kWh</span>
+                      </div>
+
+                      {/* Book button */}
+                      <button
+                        onClick={() => s.available > 0 && router.push(`/stations/${s.id}`)}
+                        disabled={s.available === 0}
+                        className={`ml-3 px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors flex-shrink-0 ${
+                          s.available === 0
+                            ? "bg-[#1a1a1a] text-[#444] cursor-not-allowed border border-[#2a2a2a]"
+                            : "bg-white hover:bg-gray-100 text-black"
+                        }`}
+                      >
+                        Book
+                      </button>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

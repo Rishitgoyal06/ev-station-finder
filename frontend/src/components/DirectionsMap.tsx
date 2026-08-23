@@ -124,38 +124,67 @@ export default function DirectionsMap({
         </div>
       `);
 
-    // Calculate and draw route using a simple line (in production, you'd use a routing service)
-    const routeLine = L.polyline([userLocation, stationLocation], {
-      color: '#22c55e',
-      weight: 4,
-      opacity: 0.8,
-      dashArray: '10, 10',
-    }).addTo(map);
+    fetch(`http://localhost:8001/directions?origin_lat=${userLocation[0]}&origin_lng=${userLocation[1]}&dest_lat=${stationLocation[0]}&dest_lng=${stationLocation[1]}&route_type=fastest`)
+      .then(res => res.json())
+      .then(data => {
+        if (!mapInstanceRef.current) return;
+        if (data && data.route_points) {
+          const routeLine = L.polyline(data.route_points, {
+            color: '#22c55e',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '10, 10',
+          }).addTo(map);
 
-    // Add animated route effect
-    const animatedRoute = L.polyline([userLocation, stationLocation], {
-      color: '#22c55e',
-      weight: 6,
-      opacity: 0.3,
-    }).addTo(map);
+          const animatedRoute = L.polyline(data.route_points, {
+            color: '#22c55e',
+            weight: 6,
+            opacity: 0.3,
+          }).addTo(map);
 
-    // Fit map to show both points with some padding
-    const group = new L.FeatureGroup([userMarker, stationMarker, routeLine]);
-    map.fitBounds(group.getBounds().pad(0.1));
+          const group = new L.FeatureGroup([userMarker, stationMarker, routeLine]);
+          map.fitBounds(group.getBounds().pad(0.1));
 
-    // Calculate approximate distance and time
-    const distance = map.distance(userLocation, stationLocation);
-    const distanceKm = (distance / 1000).toFixed(1);
-    const estimatedTime = Math.max(5, Math.round(distance / 1000 * 2.5)); // Rough estimate: 2.5 min per km in city
+          if (onRouteCalculated) {
+            onRouteCalculated({
+              distance: data.distance || "Unknown",
+              duration: data.duration || "Unknown",
+              traffic: "Moderate traffic"
+            });
+          }
+        }
+      })
+      .catch(e => {
+        console.error("Routing failed", e);
+        if (!mapInstanceRef.current) return;
+        const routeLine = L.polyline([userLocation, stationLocation], {
+          color: '#22c55e',
+          weight: 4,
+          opacity: 0.8,
+          dashArray: '10, 10',
+        }).addTo(map);
 
-    // Call the callback with calculated route info
-    if (onRouteCalculated) {
-      onRouteCalculated({
-        distance: `${distanceKm} km`,
-        duration: `${estimatedTime} min`,
-        traffic: distance > 5000 ? "Moderate traffic" : "Light traffic"
+        const animatedRoute = L.polyline([userLocation, stationLocation], {
+          color: '#22c55e',
+          weight: 6,
+          opacity: 0.3,
+        }).addTo(map);
+
+        const group = new L.FeatureGroup([userMarker, stationMarker, routeLine]);
+        map.fitBounds(group.getBounds().pad(0.1));
+
+        const distance = map.distance(userLocation, stationLocation);
+        const distanceKm = (distance / 1000).toFixed(1);
+        const estimatedTime = Math.max(5, Math.round(distance / 1000 * 2.5));
+
+        if (onRouteCalculated) {
+          onRouteCalculated({
+            distance: `${distanceKm} km`,
+            duration: `${estimatedTime} min`,
+            traffic: distance > 5000 ? "Moderate traffic" : "Light traffic"
+          });
+        }
       });
-    }
 
     // Add custom zoom controls
     const zoomControl = L.control.zoom({

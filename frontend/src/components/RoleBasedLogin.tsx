@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRole, UserRole } from "@/contexts/RoleContext";
+import { IconUser, IconBuildingStore, IconUserScan, IconSettings } from "@tabler/icons-react";
 
 interface RoleBasedLoginProps {
   isOpen: boolean;
@@ -21,28 +22,28 @@ export default function RoleBasedLogin({ isOpen, onClose }: RoleBasedLoginProps)
       id: "customer" as UserRole,
       name: "Customer",
       description: "Book and manage charging sessions",
-      icon: "👤",
+      icon: IconUser,
       demoEmail: "customer@test.com"
     },
     {
       id: "owner" as UserRole,
       name: "Station Owner",
       description: "Manage your charging stations",
-      icon: "🏢",
+      icon: IconBuildingStore,
       demoEmail: "owner@test.com"
     },
     {
       id: "worker" as UserRole,
       name: "Station Worker",
       description: "Update slot status and assist customers",
-      icon: "👷",
+      icon: IconUserScan,
       demoEmail: "worker@test.com"
     },
     {
       id: "admin" as UserRole,
       name: "Admin",
       description: "System administration and oversight",
-      icon: "⚙️",
+      icon: IconSettings,
       demoEmail: "admin@test.com"
     }
   ];
@@ -111,7 +112,7 @@ export default function RoleBasedLogin({ isOpen, onClose }: RoleBasedLoginProps)
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-lg">{role.icon}</span>
+                    <role.icon size={18} className="text-green-400" stroke={1.8} />
                     <span className={`font-medium text-sm ${
                       selectedRole === role.id ? "text-green-400" : "text-white"
                     }`}>

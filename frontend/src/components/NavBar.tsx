@@ -4,7 +4,6 @@ import {
   NavBody,
   NavItems,
   MobileNav,
-  NavbarLogo,
   NavbarButton,
   MobileNavHeader,
   MobileNavToggle,
@@ -13,6 +12,7 @@ import {
 import { useState } from "react";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/components/AuthContext";
+import { IconBolt, IconChargingPile, IconSparkles } from "@tabler/icons-react";
  
 export function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -32,14 +32,33 @@ export function NavBar() {
       <div className="relative w-full">
         <Navbar>
           <NavBody>
-            <NavbarLogo />
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1f1f1f] via-[#111] to-[#050505] border border-white/10 shadow-[0_0_30px_rgba(34,197,94,0.18)]">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-400/20 via-transparent to-emerald-500/10" />
+                <IconChargingPile size={20} className="relative text-green-400" stroke={1.8} />
+              </div>
+              <div className="hidden sm:block leading-tight">
+                <div className="flex items-center gap-1.5 text-white font-semibold tracking-wide">
+                  EV Station
+                  <IconSparkles size={14} className="text-green-400" stroke={1.8} />
+                </div>
+                <div className="text-[11px] uppercase tracking-[0.3em] text-gray-400">
+                  Finder
+                </div>
+              </div>
+            </div>
             <NavItems items={navItems} />
             <div className="flex items-center gap-4">
               {isAuthenticated && user ? (
                 <div className="flex items-center gap-3">
-                  <div className="text-right hidden sm:block">
-                    <div className="text-white text-sm font-semibold">{user.name}</div>
-                    <div className="text-green-400 text-xs capitalize">{user.role}</div>
+                  <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/15 text-green-400">
+                      <IconBolt size={16} stroke={1.9} />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white text-sm font-semibold leading-none">{user.name}</div>
+                      <div className="text-green-400 text-[11px] uppercase tracking-[0.2em]">{user.role}</div>
+                    </div>
                   </div>
                   <NavbarButton 
                     variant="secondary"
@@ -76,7 +95,12 @@ export function NavBar() {
  
           <MobileNav>
             <MobileNavHeader>
-              <NavbarLogo />
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1f1f1f] to-[#050505] border border-white/10">
+                  <IconChargingPile size={18} className="text-green-400" stroke={1.8} />
+                </div>
+                <div className="text-white font-semibold">EV Station</div>
+              </div>
               <MobileNavToggle
                 isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

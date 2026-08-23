@@ -130,31 +130,74 @@ export default function MapComponent() {
       });
     };
 
-    evStations.forEach(station => {
-      const marker = L.marker([station.lat, station.lng], {
-        icon: createCustomIcon(station.status)
-      }).addTo(map);
+    const loadStations = async () => {
+      try {
+        const res = await fetch(`http://localhost:8001/ev-stations?lat=20.5937&lng=78.9629&radius=2000000`);
+        const data = await res.json();
+        const results = data.results || [];
+        
+        if (results.length === 0) throw new Error("No stations found");
 
-      marker.bindPopup(`
-        <div style="
-          background: #020617;
-          color: #E5E7EB;
-          border: 1px solid #22C55E;
-          border-radius: 8px;
-          padding: 12px;
-          font-family: system-ui;
-        ">
-          <h3 style="margin: 0 0 8px 0; color: #22C55E; font-size: 14px; font-weight: 600;">
-            ${station.name}
-          </h3>
-          <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
-            Status: <span style="color: ${station.status === 'available' ? '#22C55E' : station.status === 'occupied' ? '#EF4444' : '#F59E0B'}">
-              ${station.status.charAt(0).toUpperCase() + station.status.slice(1)}
-            </span>
-          </p>
-        </div>
-      `);
-    });
+        if (!mapInstanceRef.current) return;
+
+        results.forEach((station: any) => {
+          const status = station.open_now ? "available" : "occupied";
+          const marker = L.marker([station.latitude, station.longitude], {
+            icon: createCustomIcon(status)
+          }).addTo(map);
+
+          marker.bindPopup(`
+            <div style="
+              background: #020617;
+              color: #E5E7EB;
+              border: 1px solid #22C55E;
+              border-radius: 8px;
+              padding: 12px;
+              font-family: system-ui;
+            ">
+              <h3 style="margin: 0 0 8px 0; color: #22C55E; font-size: 14px; font-weight: 600;">
+                ${station.name}
+              </h3>
+              <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+                Status: <span style="color: ${status === 'available' ? '#22C55E' : '#EF4444'}">
+                  ${status === 'available' ? 'Open' : 'Closed'}
+                </span>
+              </p>
+            </div>
+          `);
+        });
+      } catch (e) {
+        console.error("Failed to load map stations:", e);
+        if (!mapInstanceRef.current) return;
+        evStations.forEach(station => {
+          const marker = L.marker([station.lat, station.lng], {
+            icon: createCustomIcon(station.status)
+          }).addTo(map);
+
+          marker.bindPopup(`
+            <div style="
+              background: #020617;
+              color: #E5E7EB;
+              border: 1px solid #22C55E;
+              border-radius: 8px;
+              padding: 12px;
+              font-family: system-ui;
+            ">
+              <h3 style="margin: 0 0 8px 0; color: #22C55E; font-size: 14px; font-weight: 600;">
+                ${station.name}
+              </h3>
+              <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+                Status: <span style="color: ${station.status === 'available' ? '#22C55E' : station.status === 'occupied' ? '#EF4444' : '#F59E0B'}">
+                  ${station.status.charAt(0).toUpperCase() + station.status.slice(1)}
+                </span>
+              </p>
+            </div>
+          `);
+        });
+      }
+    };
+    
+    loadStations();
 
     const style = document.createElement('style');
     style.textContent = `

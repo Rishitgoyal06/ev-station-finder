@@ -54,7 +54,7 @@ export function SignupForm({
 
     if (res.ok) {
       onSuccess?.();
-      router.push("/dashboard");
+      router.push(res.user?.role === "owner" ? "/owner" : res.user?.role === "admin" ? "/admin" : "/dashboard");
     } else {
       setError(res.error || "Failed to create account.");
     }
@@ -73,7 +73,7 @@ export function SignupForm({
       setLoading(false);
       if (res.ok) {
         onSuccess?.();
-        router.push("/dashboard");
+        router.push(res.user?.role === "owner" ? "/owner" : res.user?.role === "admin" ? "/admin" : "/dashboard");
       } else {
         setError(res.error || "Google Sign-Up failed.");
       }
@@ -101,7 +101,7 @@ export function SignupForm({
     setLoading(false);
     if (res.ok) {
       onSuccess?.();
-      router.push("/dashboard");
+      router.push(res.user?.role === "owner" ? "/owner" : res.user?.role === "admin" ? "/admin" : "/dashboard");
     } else {
       setError(res.error || "Google Sign-Up failed.");
     }
@@ -162,7 +162,7 @@ export function SignupForm({
                   className="w-full bg-black/50 border border-green-500/30 text-white rounded-md p-2 text-sm focus:border-green-500 outline-none"
                 >
                   <option value="user" className="bg-gray-900 text-white">EV Owner / Driver</option>
-                  <option value="station_owner" className="bg-gray-900 text-white">Station Owner</option>
+                  <option value="owner" className="bg-gray-900 text-white">Station Owner</option>
                   <option value="worker" className="bg-gray-900 text-white">Station Operator / Worker</option>
                 </select>
               </Field>

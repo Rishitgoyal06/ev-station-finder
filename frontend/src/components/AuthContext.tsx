@@ -13,9 +13,9 @@ export interface UserProfile {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: UserProfile | null;
-  login: (emailOrUsername: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  signup: (name: string, email: string, password: string, role?: string) => Promise<{ ok: boolean; error?: string }>;
-  googleLogin: (credentialData: { credential?: string; userInfo?: any; role?: string }) => Promise<{ ok: boolean; error?: string }>;
+  login: (emailOrUsername: string, password: string) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
+  signup: (name: string, email: string, password: string, role?: string) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
+  googleLogin: (credentialData: { credential?: string; userInfo?: any; role?: string }) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -23,6 +23,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "1000000000000-dummyclientid.apps.googleusercontent.com";
+
+const normalizeRole = (role?: string) => {
+  if (!role) return "user";
+  if (role === "customer") return "user";
+  if (role === "station_owner") return "owner";
+  return role;
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       if (data.authenticated && data.user) {
         setIsAuthenticated(true);
-        setUser(data.user);
+        setUser({ ...data.user, role: normalizeRole(data.user.role) });
       } else {
         setIsAuthenticated(false);
         setUser(null);
@@ -53,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (emailOrUsername: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+  const login = async (emailOrUsername: string, password: string): Promise<{ ok: boolean; error?: string; user?: UserProfile }> => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -63,9 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       if (data.ok && data.user) {
+        const normalizedUser = { ...data.user, role: normalizeRole(data.user.role) };
         setIsAuthenticated(true);
-        setUser(data.user);
-        return { ok: true };
+        setUser(normalizedUser);
+        return { ok: true, user: normalizedUser };
       }
       return { ok: false, error: data.error || "Login failed" };
     } catch (error: any) {
@@ -79,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     role: string = "user"
-  ): Promise<{ ok: boolean; error?: string }> => {
+  ): Promise<{ ok: boolean; error?: string; user?: UserProfile }> => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -89,9 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       if (data.ok && data.user) {
+        const normalizedUser = { ...data.user, role: normalizeRole(data.user.role) };
         setIsAuthenticated(true);
-        setUser(data.user);
-        return { ok: true };
+        setUser(normalizedUser);
+        return { ok: true, user: normalizedUser };
       }
       return { ok: false, error: data.error || "Registration failed" };
     } catch (error: any) {
@@ -100,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const googleLogin = async (credentialData: { credential?: string; userInfo?: any; role?: string }): Promise<{ ok: boolean; error?: string }> => {
+  const googleLogin = async (credentialData: { credential?: string; userInfo?: any; role?: string }): Promise<{ ok: boolean; error?: string; user?: UserProfile }> => {
     try {
       const response = await fetch("/api/auth/google", {
         method: "POST",
@@ -110,9 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       if (data.ok && data.user) {
+        const normalizedUser = { ...data.user, role: normalizeRole(data.user.role) };
         setIsAuthenticated(true);
-        setUser(data.user);
-        return { ok: true };
+        setUser(normalizedUser);
+        return { ok: true, user: normalizedUser };
       }
       return { ok: false, error: data.error || "Google Auth failed" };
     } catch (error: any) {

@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/components/AuthContext";
+import { useRouter } from "next/navigation";
 import { IconBolt, IconChargingPile, IconSparkles } from "@tabler/icons-react";
  
 export function NavBar() {
@@ -19,6 +20,18 @@ export function NavBar() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const { isAuthenticated, user, logout } = useAuth();
+  const router = useRouter();
+
+  const getDashboardPath = () => {
+    const role = user?.role;
+    return role === "owner"
+      ? "/owner"
+      : role === "admin"
+        ? "/admin"
+        : role === "worker"
+          ? "/worker"
+          : "/dashboard";
+  };
 
   const navItems = [
     { name: "Home", link: "/" },
@@ -32,7 +45,17 @@ export function NavBar() {
       <div className="relative w-full">
         <Navbar>
           <NavBody>
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (isAuthenticated) {
+                  router.push(getDashboardPath());
+                } else {
+                  router.push("/");
+                }
+              }}
+              className="flex items-center gap-3 text-left"
+            >
               <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1f1f1f] via-[#111] to-[#050505] border border-white/10 shadow-[0_0_30px_rgba(34,197,94,0.18)]">
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-400/20 via-transparent to-emerald-500/10" />
                 <IconChargingPile size={20} className="relative text-green-400" stroke={1.8} />
@@ -46,7 +69,7 @@ export function NavBar() {
                   Finder
                 </div>
               </div>
-            </div>
+            </button>
             <NavItems items={navItems} />
             <div className="flex items-center gap-4">
               {isAuthenticated && user ? (
@@ -95,12 +118,22 @@ export function NavBar() {
  
           <MobileNav>
             <MobileNavHeader>
-              <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isAuthenticated) {
+                    router.push(getDashboardPath());
+                  } else {
+                    router.push("/");
+                  }
+                }}
+                className="flex items-center gap-2 text-left"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1f1f1f] to-[#050505] border border-white/10">
                   <IconChargingPile size={18} className="text-green-400" stroke={1.8} />
                 </div>
                 <div className="text-white font-semibold">EV Station</div>
-              </div>
+              </button>
               <MobileNavToggle
                 isOpen={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

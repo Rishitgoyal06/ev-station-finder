@@ -43,6 +43,8 @@ export default function MapComponent() {
   const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!mapRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapRef.current, {
@@ -138,13 +140,13 @@ export default function MapComponent() {
         
         if (results.length === 0) throw new Error("No stations found");
 
-        if (!mapInstanceRef.current) return;
+        if (cancelled || !mapInstanceRef.current) return;
 
         results.forEach((station: any) => {
           const status = station.open_now ? "available" : "occupied";
           const marker = L.marker([station.latitude, station.longitude], {
             icon: createCustomIcon(status)
-          }).addTo(map);
+          }).addTo(mapInstanceRef.current!);
 
           marker.bindPopup(`
             <div style="
@@ -168,11 +170,11 @@ export default function MapComponent() {
         });
       } catch (e) {
         console.error("Failed to load map stations:", e);
-        if (!mapInstanceRef.current) return;
+        if (cancelled || !mapInstanceRef.current) return;
         evStations.forEach(station => {
           const marker = L.marker([station.lat, station.lng], {
             icon: createCustomIcon(station.status)
-          }).addTo(map);
+          }).addTo(mapInstanceRef.current!);
 
           marker.bindPopup(`
             <div style="
@@ -218,6 +220,7 @@ export default function MapComponent() {
     document.head.appendChild(style);
 
     return () => {
+      cancelled = true;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;

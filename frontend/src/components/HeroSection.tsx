@@ -10,12 +10,21 @@ import { AuthModal } from "./AuthModal";
 export function HeroSection() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   const handleFindStations = () => {
     if (isAuthenticated) {
-      router.push("/dashboard");
+      const role = user?.role;
+      router.push(
+        role === "owner"
+          ? "/owner"
+          : role === "admin"
+            ? "/admin"
+            : role === "worker"
+              ? "/worker"
+              : "/dashboard"
+      );
     } else {
       setIsAuthModalOpen(true);
     }

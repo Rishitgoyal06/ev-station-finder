@@ -40,7 +40,15 @@ export function LoginForm({
     setLoading(false);
     if (res.ok) {
       onSuccess?.();
-      router.push(res.user?.role === "owner" ? "/owner" : res.user?.role === "admin" ? "/admin" : "/dashboard");
+      router.push(
+        res.user?.role === "owner"
+          ? "/owner"
+          : res.user?.role === "admin"
+            ? "/admin"
+            : res.user?.role === "worker"
+              ? "/worker"
+              : "/dashboard"
+      );
     } else {
       setError(res.error || "Invalid credentials. Please try again.");
     }
@@ -60,7 +68,15 @@ export function LoginForm({
       setLoading(false);
       if (res.ok) {
         onSuccess?.();
-        router.push(res.user?.role === "owner" ? "/owner" : res.user?.role === "admin" ? "/admin" : "/dashboard");
+        router.push(
+          res.user?.role === "owner"
+            ? "/owner"
+            : res.user?.role === "admin"
+              ? "/admin"
+              : res.user?.role === "worker"
+                ? "/worker"
+                : "/dashboard"
+        );
       } else {
         setError(res.error || "Google login failed");
       }
@@ -88,7 +104,15 @@ export function LoginForm({
     setLoading(false);
     if (res.ok) {
       onSuccess?.();
-      router.push(res.user?.role === "owner" ? "/owner" : res.user?.role === "admin" ? "/admin" : "/dashboard");
+      router.push(
+        res.user?.role === "owner"
+          ? "/owner"
+          : res.user?.role === "admin"
+            ? "/admin"
+            : res.user?.role === "worker"
+              ? "/worker"
+              : "/dashboard"
+      );
     } else {
       setError(res.error || "Google login failed");
     }

@@ -34,7 +34,7 @@ export default function StationsPage() {
     const fetchStations = async (lat: number, lng: number) => {
       setIsStationsLoading(true);
       try {
-        const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
+        const res = await fetch(`http://localhost:8000/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
         const data = await res.json();
         
         if (data.results && data.results.length > 0) {
@@ -64,7 +64,7 @@ export default function StationsPage() {
               price: 12 + (seed % 10),
               chargeTime: isDC ? "35 mins" : "60 mins",
               verified: seed % 3 !== 0,
-              img: s.photo_urls && s.photo_urls.length > 0 ? `http://localhost:8001${s.photo_urls[0]}` : imgs[seed % imgs.length]
+              img: s.photo_urls && s.photo_urls.length > 0 ? `http://localhost:8000${s.photo_urls[0]}` : imgs[seed % imgs.length]
             };
           });
           setStationsList(mapped);

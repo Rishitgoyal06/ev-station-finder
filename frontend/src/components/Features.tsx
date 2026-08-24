@@ -11,6 +11,7 @@ import {
   Search,
   Shield,
   Sprout,
+  Sparkles,
   Timer,
   TimerReset,
   Wallet,
@@ -162,29 +163,36 @@ export default function Features() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-emerald-950/20 to-gray-950">
+    <div className="min-h-screen overflow-hidden bg-[#050705] text-white">
       {/* Hero Section */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="pt-32 pb-20 px-4 sm:px-6 lg:px-8"
+        className="relative px-4 pb-20 pt-28 sm:px-6 lg:px-8"
       >
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2),_transparent_32%),radial-gradient(circle_at_80%_20%,_rgba(34,197,94,0.14),_transparent_24%)]" />
+        <div className="max-w-7xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+            <Sparkles size={14} />
+            Product capabilities
+          </div>
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="mt-6 text-4xl font-black text-white sm:text-5xl lg:text-7xl"
           >
-            Powerful <span className="text-green-400">Features</span>
+            Features built for the{" "}
+            <span className="bg-gradient-to-r from-emerald-300 via-green-300 to-cyan-300 bg-clip-text text-transparent">
+              full EV journey
+            </span>
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-gray-300 max-w-3xl mx-auto mb-12"
+            transition={{ delay: 0.15 }}
+            className="mt-6 max-w-3xl mx-auto text-lg leading-8 text-slate-300 sm:text-xl"
           >
-            Discover everything that makes Charge IQ the ultimate EV charging
-            companion
+            From discovery to booking, routing to administration, Charge IQ keeps every part of the charging experience connected and clear.
           </motion.p>
         </div>
       </motion.section>
@@ -202,22 +210,22 @@ export default function Features() {
               <motion.div
                 key={index}
                 variants={itemVariants}
-                className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20 hover:border-green-400/40 transition-all group hover:scale-105"
+                className="group rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-emerald-400/30"
               >
-                <div className="flex items-center justify-center h-20 mb-6 group-hover:scale-110 transition-transform">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-400/10 transition-transform group-hover:scale-110">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4">
+                <h3 className="text-2xl font-bold text-white mb-4">
                   {feature.title}
                 </h3>
-                <p className="text-gray-300 mb-6">{feature.description}</p>
+                <p className="mb-6 leading-7 text-slate-300">{feature.description}</p>
                 <ul className="space-y-2">
                   {feature.details.map((detail, idx) => (
                     <li
                       key={idx}
-                      className="flex items-center text-sm text-gray-400"
+                      className="flex items-center text-sm text-slate-400"
                     >
-                      <span className="text-green-400 mr-2">✓</span>
+                      <span className="mr-2 text-emerald-300">✓</span>
                       {detail}
                     </li>
                   ))}
@@ -232,7 +240,7 @@ export default function Features() {
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-emerald-950/30 to-gray-950/30"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10"
       >
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -240,10 +248,10 @@ export default function Features() {
             whileInView={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Why Choose <span className="text-green-400">Charge IQ</span>?
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+              Why Choose <span className="text-emerald-300">Charge IQ</span>?
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="max-w-3xl mx-auto text-xl leading-8 text-slate-300">
               Experience the benefits that make us India's preferred EV charging
               platform
             </p>
@@ -256,18 +264,18 @@ export default function Features() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20 hover:border-green-400/40 transition-all group"
+                className="group rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm transition-all hover:border-emerald-400/30"
               >
-                <div className="flex items-center justify-center h-16 mb-4 group-hover:scale-110 transition-transform">
+                <div className="mb-4 flex h-16 items-center justify-center text-emerald-300 transition-transform group-hover:scale-110">
                   {benefit.icon}
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   {benefit.title}
                 </h3>
-                <p className="text-gray-300 mb-4 text-sm">
+                <p className="mb-4 text-sm leading-6 text-slate-300">
                   {benefit.description}
                 </p>
-                <div className="text-2xl font-bold text-green-400">
+                <div className="text-2xl font-bold text-emerald-300">
                   {benefit.stat}
                 </div>
               </motion.div>
@@ -288,8 +296,8 @@ export default function Features() {
             whileInView={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Technical <span className="text-green-400">Specifications</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+              Technical <span className="text-emerald-300">Specifications</span>
             </h2>
           </motion.div>
 
@@ -297,7 +305,7 @@ export default function Features() {
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20"
+              className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
             >
               <h3 className="text-2xl font-bold text-white mb-6">
                 Platform Features
@@ -315,8 +323,8 @@ export default function Features() {
                     key={index}
                     className="flex justify-between items-center py-2 border-b border-gray-700/50"
                   >
-                    <span className="text-gray-300">{spec.label}</span>
-                    <span className="text-green-400 font-bold">
+                    <span className="text-slate-300">{spec.label}</span>
+                    <span className="font-bold text-emerald-300">
                       {spec.value}
                     </span>
                   </div>
@@ -327,7 +335,7 @@ export default function Features() {
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20"
+              className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
             >
               <h3 className="text-2xl font-bold text-white mb-6">
                 Technology Stack
@@ -345,10 +353,10 @@ export default function Features() {
                   { category: "Deployment", tech: "Vercel, Railway, Docker" },
                 ].map((tech, index) => (
                   <div key={index} className="py-2">
-                    <div className="text-green-400 font-semibold mb-1">
+                    <div className="mb-1 font-semibold text-emerald-300">
                       {tech.category}
                     </div>
-                    <div className="text-gray-300 text-sm">{tech.tech}</div>
+                    <div className="text-sm text-slate-300">{tech.tech}</div>
                   </div>
                 ))}
               </div>
@@ -361,7 +369,7 @@ export default function Features() {
       <motion.section
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-400/10 to-emerald-600/10"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10"
       >
         <div className="max-w-4xl mx-auto text-center">
           <motion.h2
@@ -375,7 +383,7 @@ export default function Features() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-gray-300 mb-8"
+            className="mb-8 text-xl text-slate-300"
           >
             Join thousands of EV users who trust Charge IQ for their charging
             needs
@@ -388,13 +396,13 @@ export default function Features() {
           >
             <button
               onClick={() => window.open("http://localhost:8001", "_blank")}
-              className="px-8 py-4 bg-green-400 text-gray-900 font-bold rounded-xl hover:bg-green-300 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-300 px-8 py-4 font-bold text-black transition-transform hover:scale-[1.02]"
             >
               Find Charging Stations
             </button>
             <button
               onClick={() => (window.location.href = "/")}
-              className="px-8 py-4 border border-green-400 text-green-400 font-bold rounded-xl hover:bg-green-400/10 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 px-8 py-4 font-bold text-white transition-colors hover:bg-white/5"
             >
               Back to Home
             </button>

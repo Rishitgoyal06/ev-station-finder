@@ -50,10 +50,10 @@ const stats = [
 
 export function StatsSection() {
   return (
-    <section className="py-20 bg-gradient-to-b from-black via-gray-950/80 to-black relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/15 via-green-950/8 to-transparent" />
+    <section className="py-24 bg-gradient-to-b from-black via-[#07110d] to-black relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.12),transparent_25%)]" />
       <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-green-900/20 to-transparent" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-green-600/8 via-green-700/4 to-transparent rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-green-600/10 via-green-700/5 to-transparent rounded-full blur-3xl animate-pulse" />
       
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <motion.div
@@ -74,7 +74,7 @@ export function StatsSection() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
@@ -84,15 +84,15 @@ export function StatsSection() {
               viewport={{ once: true }}
               className="group relative"
             >
-              <div className="relative p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl text-center">
+              <div className="relative p-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl text-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
-                <div className={`inline-flex p-4 rounded-xl bg-gradient-to-r ${stat.color} mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${stat.color} mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                   <stat.icon className="w-8 h-8 text-white" />
                 </div>
                 
                 <div className="mb-4">
-                  <div className="text-4xl md:text-5xl font-black text-white mb-2 group-hover:text-green-300 transition-colors">
+                  <div className="text-4xl md:text-5xl font-black text-white mb-2 group-hover:text-green-300 transition-colors tracking-tight">
                     {stat.number}
                   </div>
                   <h3 className="text-xl font-bold text-green-400 mb-2">
@@ -103,7 +103,7 @@ export function StatsSection() {
                   </p>
                 </div>
                 
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             </motion.div>
           ))}

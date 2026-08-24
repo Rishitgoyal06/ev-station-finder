@@ -1,201 +1,194 @@
 "use client";
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Clock, Linkedin, Mail, MapPin, Phone, Twitter } from 'lucide-react';
+
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, Clock, Globe, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 900));
     setSubmitted(true);
     setIsSubmitting(false);
-    setFormData({ name: '', email: '', subject: '', message: '' });
-    
-    setTimeout(() => setSubmitted(false), 3000);
+    setFormData({ name: "", email: "", subject: "", message: "" });
+    setTimeout(() => setSubmitted(false), 2500);
   };
 
+  const infoCards = [
+    {
+      title: "Head office",
+      lines: ["123 EV Street, Tech City", "Mumbai, Maharashtra 400001", "India"],
+      icon: <MapPin size={18} />,
+    },
+    {
+      title: "Support",
+      lines: ["+91 98765 43210", "+91 87654 32109"],
+      icon: <Phone size={18} />,
+    },
+    {
+      title: "Email",
+      lines: ["support@chargeiq.com", "info@chargeiq.com"],
+      icon: <Mail size={18} />,
+    },
+    {
+      title: "Hours",
+      lines: ["Mon - Fri: 9:00 AM - 6:00 PM", "Sat: 10:00 AM - 4:00 PM"],
+      icon: <Clock size={18} />,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6">
-            Contact <span className="text-green-400">Us</span>
+    <div className="relative min-h-screen overflow-hidden bg-[#050705] pt-24 pb-12 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.16),_transparent_30%),radial-gradient(circle_at_80%_30%,_rgba(34,197,94,0.12),_transparent_24%)]" />
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mx-auto mb-14 max-w-3xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+            <Globe size={14} />
+            We’d love to hear from you
+          </div>
+          <h1 className="mt-6 text-4xl font-black sm:text-5xl lg:text-6xl">
+            Contact <span className="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">Charge IQ</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Have questions about EV charging? Need support? We're here to help you power your electric journey.
+          <p className="mt-5 text-lg leading-8 text-slate-300 sm:text-xl">
+            Reach out for support, partnerships, station onboarding, or anything else related to your EV charging journey.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* Contact Form */}
+        <div className="grid gap-8 lg:grid-cols-2">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20"
+            className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-sm"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
-            
+            <div className="mb-6">
+              <div className="text-sm uppercase tracking-[0.28em] text-slate-400">Send a message</div>
+              <h2 className="mt-2 text-3xl font-bold">Tell us what you need</h2>
+            </div>
+
             {submitted && (
-              <div className="mb-6 p-4 bg-green-500/20 border border-green-400/50 rounded-lg">
-                <p className="text-green-300 text-center">Thank you! Your message has been sent successfully.</p>
+              <div className="mb-6 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
+                Thanks. Your message has been sent successfully.
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-green-400 focus:outline-none transition-colors"
-                    placeholder="Your full name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-green-400 focus:outline-none transition-colors"
-                    placeholder="your@email.com"
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  { label: "Name", name: "name", type: "text", placeholder: "Your full name" },
+                  { label: "Email", name: "email", type: "email", placeholder: "you@example.com" },
+                ].map((field) => (
+                  <label key={field.name} className="block">
+                    <span className="mb-2 block text-sm text-slate-300">{field.label}</span>
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      value={formData[field.name as keyof typeof formData]}
+                      onChange={handleChange}
+                      required
+                      placeholder={field.placeholder}
+                      className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15"
+                    />
+                  </label>
+                ))}
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm text-slate-300">Subject</span>
                 <input
                   type="text"
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-green-400 focus:outline-none transition-colors"
-                  placeholder="What's this about?"
+                  placeholder="What is this about?"
+                  className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15"
                 />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm text-slate-300">Message</span>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  rows={5}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-green-400 focus:outline-none transition-colors resize-none"
-                  placeholder="Tell us how we can help you..."
+                  rows={6}
+                  placeholder="Tell us how we can help..."
+                  className="resize-none w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15"
                 />
-              </div>
-              
+              </label>
+
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-5 py-3.5 font-semibold text-black transition-transform hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100"
               >
-                {isSubmitting ? 'Sending...' : 'Send Message'}
+                {isSubmitting ? "Sending..." : "Send message"}
+                <ArrowRight size={16} />
               </button>
             </form>
           </motion.div>
 
-          {/* Contact Information */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="space-y-8"
+            className="space-y-6"
           >
-            <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20">
-              <h2 className="text-2xl font-bold text-white mb-6">Get in Touch</h2>
-              
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-400/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <MapPin size={25} color="#1cb048" />
+            <div className="rounded-[2rem] border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-black p-8 backdrop-blur-sm">
+              <div className="text-sm uppercase tracking-[0.28em] text-slate-400">Contact details</div>
+              <h2 className="mt-2 text-3xl font-bold">Talk to a real person</h2>
+              <div className="mt-8 grid gap-4">
+                {infoCards.map((card) => (
+                  <div key={card.title} className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                        {card.icon}
+                      </div>
+                      <div>
+                        <div className="font-semibold">{card.title}</div>
+                        <div className="mt-1 text-sm leading-6 text-slate-300">
+                          {card.lines.map((line) => (
+                            <div key={line}>{line}</div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Address</h3>
-                    <p className="text-gray-300">123 EV Street, Tech City<br />Mumbai, Maharashtra 400001<br />India</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-400/20 rounded-full flex items-center justify-center flex-shrink-0">
-                   <Phone size={25} color="#1cb048" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Phone</h3>
-                    <p className="text-gray-300">+91 98765 43210<br />+91 87654 32109</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-400/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Mail size={25} color="#1cb048" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Email</h3>
-                    <p className="text-gray-300">support@chargeiq.com<br />info@chargeiq.com</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-400/20 rounded-full flex items-center justify-center flex-shrink-0">
-                   <Clock size={25} color="#1cb048" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Business Hours</h3>
-                    <p className="text-gray-300">Monday - Friday: 9:00 AM - 6:00 PM<br />Saturday: 10:00 AM - 4:00 PM<br />Sunday: Closed</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20">
-              <h3 className="text-xl font-bold text-white mb-4">Follow Us</h3>
-              <div className="flex gap-4">
-                <a href="#" className="w-12 h-12 bg-green-400/20 hover:bg-green-400/30 rounded-full flex items-center justify-center transition-colors">
-                  <Mail size={25} color="#1cb048" />
-                </a>
-                <a href="#" className="w-12 h-12 bg-green-400/20 hover:bg-green-400/30 rounded-full flex items-center justify-center transition-colors">
-                 <Twitter size={25} color="#1cb048" />
-                </a>
-                <a href="#" className="w-12 h-12 bg-green-400/20 hover:bg-green-400/30 rounded-full flex items-center justify-center transition-colors">
-                  <Linkedin size={25} color="#1cb048" />
-                </a>
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-sm">
+              <h3 className="text-xl font-bold">Follow the project</h3>
+              <p className="mt-2 text-sm text-slate-400">Stay updated on launches, integrations, and improvements.</p>
+              <div className="mt-6 flex gap-3">
+                {[
+                  { href: "#", icon: <Mail size={18} /> },
+                  { href: "#", icon: <Twitter size={18} /> },
+                  { href: "#", icon: <Linkedin size={18} /> },
+                ].map((item, index) => (
+                  <a
+                    key={index}
+                    href={item.href}
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-emerald-300 transition hover:border-emerald-400/30 hover:bg-emerald-400/10"
+                  >
+                    {item.icon}
+                  </a>
+                ))}
               </div>
             </div>
           </motion.div>

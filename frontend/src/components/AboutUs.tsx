@@ -1,326 +1,211 @@
 "use client";
+
 import { motion } from "framer-motion";
-import { useState } from "react";
 import Lottie from "lottie-react";
-import { useEffect } from "react";
-import { ChartNoAxesCombined, Search, Smartphone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, MapPin, ShieldCheck, Sparkles, Zap } from "lucide-react";
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 60 },
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, ease: "easeOut" }
+  transition: { duration: 0.55, ease: "easeOut" },
 };
 
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
-};
+const cards = [
+  {
+    title: "Smart discovery",
+    description: "Find the right charger in seconds with live station data and intelligent routing.",
+    icon: <MapPin size={22} />,
+  },
+  {
+    title: "Reliable booking",
+    description: "Reserve your slot before you arrive and avoid last-minute uncertainty.",
+    icon: <ShieldCheck size={22} />,
+  },
+  {
+    title: "Built for scale",
+    description: "A platform designed for drivers, station owners, workers, and admins together.",
+    icon: <Sparkles size={22} />,
+  },
+];
 
-const scaleIn = {
-  initial: { opacity: 0, scale: 0.8 },
-  animate: { opacity: 1, scale: 1 },
-  transition: { duration: 0.6, ease: "easeOut" }
-};
+const stats = [
+  { value: "5000+", label: "Charging stations" },
+  { value: "24/7", label: "Live availability" },
+  { value: "40+", label: "Indian languages" },
+  { value: "99.9%", label: "Routing confidence" },
+];
 
 export default function AboutSection() {
-  const [chargingAnimation, setChargingAnimation] = useState(null);
-  const [businessTeamAnimation, setBusinessTeamAnimation] = useState(null);
-  const [mapBrowsingAnimation, setMapBrowsingAnimation] = useState(null);
+  const [chargingAnimation, setChargingAnimation] = useState<any>(null);
+  const [teamAnimation, setTeamAnimation] = useState<any>(null);
 
-  // Load animations
   useEffect(() => {
-    const loadAnimations = async () => {
+    const load = async () => {
       try {
-        const [charging, team, map] = await Promise.all([
-          fetch('/animations/Electric vehicle charging animation.json').then(res => res.json()),
-          fetch('/animations/Business team.json').then(res => res.json()),
-          fetch('/animations/Map browsing.json').then(res => res.json())
+        const [charging, team] = await Promise.all([
+          fetch("/animations/Electric vehicle charging animation.json").then((res) => res.json()),
+          fetch("/animations/Business team.json").then((res) => res.json()),
         ]);
         setChargingAnimation(charging);
-        setBusinessTeamAnimation(team);
-        setMapBrowsingAnimation(map);
-      } catch (error) {
-        console.log('Animation loading failed:', error);
+        setTeamAnimation(team);
+      } catch {
+        // animations are optional
       }
     };
-    loadAnimations();
+    load();
   }, []);
 
-  const techHighlights = [
-    { title: "AI-Powered", description: "Smart Recommendations", icon: "🤖" },
-    { title: "Real-Time", description: "Live Updates", icon: "⚡" },
-    { title: "Multi-Platform", description: "Web & Mobile", icon: "📱" },
-    { title: "Secure", description: "Payment Gateway", icon: "🔒" }
-  ];
-
-  const features = [
-    {
-      title: "Smart Discovery",
-      description: "AI-powered station recommendations based on your route and preferences",
-      icon: <Search size={28} />  
-    },
-    {
-      title: "Real-time Availability",
-      description: "Live updates on charging port availability and wait times",
-      icon: <ChartNoAxesCombined size={28} color="#ffffff" />
-    },
-    {
-      title: "Seamless Booking",
-      description: "Reserve your charging slot and pay in advance for hassle-free experience",
-      icon: <Smartphone size={28} color="#ffffff" />
-    }
-  ];
-
   const team = [
-    {
-      name: "Rishit Goyal",
-      image: "/profile.png",
-    },
-    {
-      name: "Het Mehta",
-      image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg",
-    },
-    {
-      name: "Anuj Dubey",
-      image: "/WhatsApp Image 2026-03-31 at 8.25.52 PM.jpeg",
-    },
-    {
-      name: "Shyamsundheraaj",
-      image: "/WhatsApp Image 2026-03-31 at 9.25.26 PM (1).jpeg",
-    }
+    { name: "Rishit Goyal", role: "Product & Engineering", image: "/profile.png" },
+    { name: "Het Mehta", role: "Operations", image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg" },
+    { name: "Anuj Dubey", role: "Platform", image: "/WhatsApp Image 2026-03-31 at 8.25.52 PM.jpeg" },
+    { name: "Shyamsundheraaj", role: "Experience", image: "/WhatsApp Image 2026-03-31 at 9.25.26 PM (1).jpeg" },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black">
-      {/* Hero Section */}
-      <motion.section 
-        initial="initial"
-        animate="animate"
-        variants={staggerContainer}
-        className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-transparent to-transparent" />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <motion.div variants={fadeInUp} className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-white mb-6">
-              About <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-cyan-300 bg-clip-text text-transparent">Charge IQ</span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Revolutionizing India's electric mobility ecosystem with intelligent charging solutions
-            </p>
+    <div className="min-h-screen overflow-hidden bg-[#050705] text-white">
+      <section className="relative px-4 pb-20 pt-28 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.22),_transparent_34%),radial-gradient(circle_at_80%_20%,_rgba(34,197,94,0.16),_transparent_28%)]" />
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center">
+          <motion.div variants={fadeUp} initial="initial" animate="animate" className="space-y-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+              <Zap size={14} />
+              About Charge IQ
+            </div>
+            <div className="space-y-5">
+              <h1 className="text-4xl font-black leading-[0.95] sm:text-5xl lg:text-7xl">
+                Charging that feels{" "}
+                <span className="bg-gradient-to-r from-emerald-300 via-green-300 to-cyan-300 bg-clip-text text-transparent">
+                  effortless
+                </span>
+              </h1>
+              <p className="max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+                Charge IQ helps EV drivers discover nearby stations, compare connector types, book a slot, and navigate with confidence. We connect the whole charging ecosystem so users, owners, workers, and admins can act on real data instead of guesswork.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {stats.map((stat) => (
+                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+                  <div className="text-2xl font-bold text-emerald-300">{stat.value}</div>
+                  <div className="mt-1 text-sm text-slate-400">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Left Side - Content */}
-            <motion.div variants={fadeInUp} className="space-y-8">
-              <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">
-                  About <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-cyan-300 bg-clip-text text-transparent">CHARGEIQ</span>
-                </h2>
-                <p className="text-gray-300 leading-relaxed mb-4">
-                  <span className="font-semibold text-green-400">CHARGEIQ</span> is a smart
-                  EV-tech startup redefining how electric vehicle owners find, access,
-                  and manage charging. Built for convenience and reliability, our
-                  platform enables users to locate nearby charging stations, check
-                  real-time availability, book preferred time slots, and make advance
-                  payments — all through a seamless digital experience.
-                </p>
-                <p className="text-gray-300 leading-relaxed mb-4">
-                  We understand that <span className="font-semibold text-emerald-400">range anxiety</span>{" "}
-                  and long waiting times are major barriers to EV adoption. CHARGEIQ
-                  eliminates uncertainty by bringing intelligent charging discovery
-                  and scheduling right to your fingertips — saving time and ensuring
-                  stress-free journeys.
-                </p>
-                <p className="text-gray-300 leading-relaxed mb-6">
-                  Driven by innovation and sustainability, we are committed to
-                  accelerating India's electric mobility ecosystem. Our technology
-                  supports EV users, charging station operators, and partners with
-                  data-driven insights and automation.
-                </p>
-              </div>
-
-              <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20">
-                <h3 className="text-xl font-bold text-white mb-4">Why Choose Charge IQ?</h3>
-                <div className="space-y-4">
-                  {features.map((feature, index) => (
-                    <motion.div 
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-start gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors"
-                    >
-                      <span className="text-2xl">{feature.icon}</span>
-                      <div>
-                        <h4 className="font-semibold text-white mb-1">{feature.title}</h4>
-                        <p className="text-gray-400 text-sm">{feature.description}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right Side - Visual */}
-            <motion.div variants={scaleIn} className="relative">
-              <div className="bg-gradient-to-br from-green-400/20 to-emerald-600/20 rounded-2xl p-8 backdrop-blur-md border border-green-400/30">
-                <div className="aspect-video bg-gray-900/50 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
+          <motion.div variants={fadeUp} initial="initial" animate="animate" className="relative">
+            <div className="rounded-[2rem] border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 via-black to-black p-6 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+              <div className="rounded-[1.75rem] border border-white/10 bg-black/40 p-4">
+                <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[1.5rem] bg-[#0b120d]">
                   {chargingAnimation ? (
-                    <Lottie 
-                      animationData={chargingAnimation} 
-                      loop={true}
-                      className="w-full h-full"
-                    />
+                    <Lottie animationData={chargingAnimation} loop className="h-full w-full" />
                   ) : (
-                    <div className="text-center text-white p-8">
-                      <div className="w-20 h-20 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-3xl">⚡</span>
+                    <div className="p-8 text-center">
+                      <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-400/15 text-3xl text-emerald-300">
+                        ⚡
                       </div>
-                      <h3 className="text-xl font-bold mb-2">Smart EV Charging</h3>
-                      <p className="text-gray-300">Intelligent solutions for sustainable mobility</p>
+                      <div className="text-xl font-semibold">Smart EV charging</div>
+                      <div className="mt-2 text-sm text-slate-400">Premium tools for smoother journeys.</div>
                     </div>
                   )}
                 </div>
-                
-                {/* Technology Highlights */}
-                <div className="grid grid-cols-2 gap-4">
-                  {techHighlights.map((tech, index) => (
-                    <motion.div 
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="text-center p-4 bg-gray-900/30 rounded-lg border border-green-400/20 hover:border-green-400/40 transition-colors group"
-                    >
-                      <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{tech.icon}</div>
-                      <div className="text-sm font-bold text-green-400 mb-1">{tech.title}</div>
-                      <div className="text-xs text-gray-300">{tech.description}</div>
-                    </motion.div>
-                  ))}
-                </div>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-3">
+          {cards.map((card, index) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.12 }}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-colors hover:border-emerald-400/30"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                {card.icon}
+              </div>
+              <h3 className="text-xl font-bold">{card.title}</h3>
+              <p className="mt-3 leading-7 text-slate-300">{card.description}</p>
             </motion.div>
-          </div>
+          ))}
         </div>
-      </motion.section>
+      </section>
 
-      {/* Vision Section */}
-      <motion.section 
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-emerald-950/50 to-gray-950/50"
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+      <section className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Our <span className="text-green-400">Vision</span>
-            </h2>
-            <p className="text-green-400 font-semibold text-xl mb-4">
-              The Future Is Electric. The Future Is Now.
+            <div className="inline-flex items-center gap-2 rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-300">
+              <Sparkles size={12} />
+              Our vision
+            </div>
+            <h2 className="mt-5 text-3xl font-bold">A better charging experience for every role</h2>
+            <p className="mt-4 leading-7 text-slate-300">
+              Our goal is to turn charging into a predictable part of travel. That means live availability, booking controls, route-aware suggestions, and dashboards that keep station owners and workers aligned with demand.
             </p>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              We envision an India where EV adoption is effortless, accessible,
-              and environmentally responsible — where charging is planned,
-              optimized, and intelligent.
-            </p>
+            <div className="mt-6 grid gap-3">
+              {[
+                "Real-time station visibility",
+                "Slot booking and cancellation flow",
+                "Owner and worker dashboards",
+                "Admin oversight with live operations",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-slate-200">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  {item}
+                </div>
+              ))}
+            </div>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Accessibility",
-                description: "Making EV charging accessible to every Indian, from metros to rural areas",
-                animation: mapBrowsingAnimation
-              },
-              {
-                title: "Sustainability",
-                description: "Promoting clean energy adoption and reducing carbon footprint nationwide",
-                animation: chargingAnimation
-              },
-              {
-                title: "Innovation",
-                description: "Leveraging cutting-edge technology for seamless charging experiences",
-                animation: null
-              }
-            ].map((item, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.2 }}
-                className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20 text-center hover:border-green-400/40 transition-colors group"
-              >
-                <div className="h-24 mb-4 flex items-center justify-center">
-                  {item.animation ? (
-                    <Lottie 
-                      animationData={item.animation} 
-                      loop={true}
-                      className="w-16 h-16 group-hover:scale-110 transition-transform"
-                    />
-                  ) : (
-                    <div className="text-4xl group-hover:scale-110 transition-transform">🚀</div>
-                  )}
-                </div>
-                <h3 className="text-xl font-bold text-white mb-4">{item.title}</h3>
-                <p className="text-gray-300 leading-relaxed">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Team Section */}
-      <motion.section 
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        className="py-20 px-4 sm:px-6 lg:px-8"
-      >
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            className="rounded-[2rem] border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 to-black p-8 backdrop-blur-sm"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Meet Our <span className="text-green-400">Team</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Passionate innovators driving India's electric future
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {team.map((member, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-8 border border-green-400/20 text-center hover:border-green-400/40 transition-all group hover:scale-105"
-              >
-                <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-24 h-24 rounded-full object-cover border-2 border-green-400/40 group-hover:border-green-400 transition-colors"
-                  />
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm uppercase tracking-[0.28em] text-slate-400">Team</div>
+                <h2 className="mt-2 text-3xl font-bold">Built by a focused crew</h2>
+              </div>
+              {teamAnimation ? (
+                <div className="h-20 w-20 overflow-hidden rounded-2xl">
+                  <Lottie animationData={teamAnimation} loop className="h-full w-full" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{member.name}</h3>
-              </motion.div>
-            ))}
-          </div>
+              ) : null}
+            </div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {team.map((member) => (
+                <div key={member.name} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <div className="flex items-center gap-4">
+                    <img src={member.image} alt={member.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-emerald-400/40" />
+                    <div>
+                      <div className="font-semibold">{member.name}</div>
+                      <div className="text-sm text-slate-400">{member.role}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <a
+              href="/stations"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-300 px-5 py-3 font-semibold text-black transition-transform hover:scale-[1.02]"
+            >
+              Explore stations
+              <ArrowRight size={16} />
+            </a>
+          </motion.div>
         </div>
-      </motion.section>
+      </section>
     </div>
   );
 }

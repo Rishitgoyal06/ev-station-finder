@@ -20,7 +20,7 @@ export default function OwnerStationsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) router.replace("/login");
+    if (!isAuthLoading && !isAuthenticated) router.replace("/");
   }, [isAuthLoading, isAuthenticated, router]);
 
   useEffect(() => {

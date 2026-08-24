@@ -164,7 +164,7 @@ export default function OwnerDashboard() {
       <div className="p-6">
         {/* Nav Tabs */}
         <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-          {tabs.map(({ key, label, icon }) => (
+          {tabs.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
@@ -172,7 +172,7 @@ export default function OwnerDashboard() {
                 activeTab === key ? "bg-green-500 text-black" : "text-gray-400 hover:text-white hover:bg-[#1f1f1f]"
               }`}
             >
-              <span>{icon}</span> {label}
+              <Icon size={16} stroke={2} /> {label}
             </button>
           ))}
         </div>

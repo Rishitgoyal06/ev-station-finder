@@ -24,7 +24,6 @@ function BookingSuccessContent() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          router.push('/bookings');
           return 0;
         }
         return prev - 1;
@@ -33,6 +32,12 @@ function BookingSuccessContent() {
 
     return () => clearInterval(timer);
   }, [router, bookingId]);
+
+  useEffect(() => {
+    if (countdown === 0) {
+      router.push("/bookings");
+    }
+  }, [countdown, router]);
 
   const fallbackBooking = {
     id: "BK001",

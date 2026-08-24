@@ -18,6 +18,7 @@ export default function MyBookingsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionId, setActionId] = useState<string | null>(null);
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
@@ -73,6 +74,22 @@ export default function MyBookingsPage() {
   const totalSpent = bookings
     .filter((b) => b.status === "completed")
     .reduce((sum, b) => sum + b.amount, 0);
+
+  const cancelBooking = async (bookingId: string) => {
+    setActionId(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, { method: "DELETE" });
+      if (res.ok) {
+        setBookings((prev) =>
+          prev.map((booking) =>
+            booking.id === bookingId ? { ...booking, status: "cancelled" } : booking
+          )
+        );
+      }
+    } finally {
+      setActionId(null);
+    }
+  };
 
   const stats = [
     { label: "Total Bookings", value: bookings.length, color: "text-white", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", iconBg: "bg-blue-500/10", iconColor: "text-blue-400" },
@@ -203,12 +220,19 @@ export default function MyBookingsPage() {
                       <div><p className="text-xs text-gray-500 mb-1">Amount</p><p className="text-sm font-bold text-green-400">₹{booking.amount}</p></div>
                     </div>
                     <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#1a1a1a]">
-                      <button className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm font-medium transition-colors">
+                      <button
+                        onClick={() => router.push(`/bookings/${booking.id}`)}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm font-medium transition-colors"
+                      >
                         View Details
                       </button>
                       {booking.status === "confirmed" && (
-                        <button className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors">
-                          Cancel Booking
+                        <button
+                          onClick={() => cancelBooking(booking.id)}
+                          disabled={actionId === booking.id}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-60"
+                        >
+                          {actionId === booking.id ? "Cancelling..." : "Cancel Booking"}
                         </button>
                       )}
                       {booking.status === "completed" && (

@@ -8,6 +8,7 @@ export default function BookingDetailsPage() {
   const params = useParams();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [booking, setBooking] = useState<any>(null);
   const id = String(params?.id ?? "");
 
@@ -37,6 +38,26 @@ export default function BookingDetailsPage() {
 
     loadBooking();
   }, [id, isAuthLoading, isAuthenticated, router]);
+
+  const cancelBooking = async () => {
+    setIsCancelling(true);
+    try {
+      const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBooking((prev: any) => prev ? { ...prev, status: data.booking?.status || "cancelled" } : prev);
+        setShowCancelModal(false);
+      }
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const paymentSummary = {
+    chargingFee: booking?.baseCharge ?? Math.max(0, (booking?.amount || 0) - 25),
+    serviceFee: booking?.serviceFee ?? 15,
+    taxes: booking?.tax ?? 10,
+  };
 
   if (isAuthLoading || !booking) {
     return (
@@ -187,20 +208,20 @@ export default function BookingDetailsPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Charging Fee</span>
-                  <span className="text-white">₹220</span>
+                  <span className="text-white">₹{paymentSummary.chargingFee}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Service Fee</span>
-                  <span className="text-white">₹15</span>
+                  <span className="text-white">₹{paymentSummary.serviceFee}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Taxes</span>
-                  <span className="text-white">₹10</span>
+                  <span className="text-white">₹{paymentSummary.taxes}</span>
                 </div>
                 <div className="border-t border-[#1a1a1a] pt-3">
                   <div className="flex justify-between">
                     <span className="text-white font-semibold">Total Amount</span>
-                    <span className="text-green-400 font-bold text-lg">₹{mockBooking.amount}</span>
+                    <span className="text-green-400 font-bold text-lg">₹{booking.amount}</span>
                   </div>
                 </div>
               </div>
@@ -282,7 +303,7 @@ export default function BookingDetailsPage() {
             </div>
             
             <p className="text-gray-300 text-sm mb-6">
-              Canceling this booking will refund ₹{mockBooking.amount} to your original payment method within 3-5 business days.
+              Canceling this booking will refund ₹{booking.amount} to your original payment method within 3-5 business days.
             </p>
             
             <div className="flex gap-3">
@@ -292,8 +313,12 @@ export default function BookingDetailsPage() {
               >
                 Keep Booking
               </button>
-              <button className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
-                Yes, Cancel
+              <button
+                onClick={cancelBooking}
+                disabled={isCancelling}
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-red-500/60 text-white rounded-lg font-medium transition-colors"
+              >
+                {isCancelling ? "Cancelling..." : "Yes, Cancel"}
               </button>
             </div>
           </div>

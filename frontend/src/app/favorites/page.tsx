@@ -148,7 +148,13 @@ export default function FavoritesPage() {
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/directions?station=${encodeURIComponent(station.name)}&lat=12.9716&lng=77.5946`);
+                  const qs = new URLSearchParams({
+                    station: station.name,
+                    address: station.address || "",
+                    ...(station.latitude ? { lat: String(station.latitude) } : {}),
+                    ...(station.longitude ? { lng: String(station.longitude) } : {}),
+                  });
+                  router.push(`/directions?${qs.toString()}`);
                 }}
                 className="px-3 py-1.5 bg-[#1f1f1f] hover:bg-[#2a2a2a] text-gray-300 text-xs rounded-lg transition-colors"
               >
@@ -157,7 +163,20 @@ export default function FavoritesPage() {
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/stations/${station.id}`);
+                  const params = new URLSearchParams({
+                    name: station.name,
+                    address: station.address || "",
+                    city: station.city || "",
+                    price: String(station.price || 15),
+                    chargeTime: station.chargeTime || "45 mins",
+                    connectors: (station.connectors || ["Type 2"]).join(","),
+                    img: station.image || station.img || "",
+                    available: String(station.available ?? 1),
+                    total: String(station.total ?? 4),
+                    peakPower: station.type?.includes("DC") ? "150 kW" : "22 kW",
+                    powerType: station.type || "AC Charging",
+                  });
+                  router.push(`/stations/${encodeURIComponent(station.id)}?${params.toString()}`);
                 }}
                 className="px-3 py-1.5 bg-green-500 hover:bg-green-400 text-black text-xs font-medium rounded-lg transition-colors"
               >

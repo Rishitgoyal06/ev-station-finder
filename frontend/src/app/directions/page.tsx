@@ -17,9 +17,14 @@ function DirectionsContent() {
   });
 
   // Get station details from URL params
-  const stationName = searchParams?.get('station') || 'Charging Station';
-  const stationLat = parseFloat(searchParams?.get('lat') || '12.9716');
-  const stationLng = parseFloat(searchParams?.get('lng') || '77.5946');
+  const stationName = searchParams?.get("station") || "Charging Station";
+  const stationAddress = searchParams?.get("address") || "";
+  const stationLat = parseFloat(searchParams?.get("lat") || "12.9716");
+  const stationLng = parseFloat(searchParams?.get("lng") || "77.5946");
+
+  const routeDestination = Number.isFinite(stationLat) && Number.isFinite(stationLng)
+    ? `${stationLat},${stationLng}`
+    : "12.9716,77.5946";
 
   useEffect(() => {
     // Get user's current location
@@ -39,7 +44,7 @@ function DirectionsContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-[#111] border-b border-[#1a1a1a] px-4 py-3 flex-shrink-0 relative z-50">
         <div className="flex items-center justify-between">
@@ -54,7 +59,10 @@ function DirectionsContent() {
             </button>
             <div>
               <h1 className="text-lg font-bold">Directions</h1>
-              <p className="text-sm text-gray-400">to {stationName}</p>
+              <p className="text-sm text-gray-400">
+                to {stationName}
+                {stationAddress ? ` • ${stationAddress}` : ""}
+              </p>
             </div>
           </div>
           
@@ -98,7 +106,7 @@ function DirectionsContent() {
           </div>
           
           <button 
-            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${stationLat},${stationLng}`, '_blank')}
+            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${routeDestination}`, "_blank")}
             className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -110,7 +118,7 @@ function DirectionsContent() {
       </div>
 
       {/* Full Screen Map */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0">
         {userLocation && (
           <DirectionsMap
             userLocation={userLocation}
@@ -131,36 +139,6 @@ function DirectionsContent() {
         )}
       </div>
 
-      {/* Bottom Controls */}
-      <div className="bg-[#111] border-t border-[#1a1a1a] px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 px-3 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6z"/>
-                <circle cx="12" cy="8" r="2"/>
-              </svg>
-              My Location
-            </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Traffic
-            </button>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-[#1f1f1f] rounded-lg transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <circle cx="12" cy="12" r="1"/>
-                <circle cx="19" cy="12" r="1"/>
-                <circle cx="5" cy="12" r="1"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

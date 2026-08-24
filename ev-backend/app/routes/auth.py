@@ -131,19 +131,6 @@ async def login(data: LoginSchema, response: Response):
                     user_doc = u
                     break
 
-    # Seed demo accounts if database is empty / testing
-    if not user_doc and data.password in ("password123", "password", "admin123", "123456"):
-        demo_accounts = {
-            "user@example.com": {"id": "u1", "name": "Ravi Kumar", "email": "user@example.com", "role": "user", "avatar": ""},
-            "owner@example.com": {"id": "u2", "name": "Aarav Sharma", "email": "owner@example.com", "role": "owner", "avatar": ""},
-            "admin@chargeiq.com": {"id": "u3", "name": "Admin Control", "email": "admin@chargeiq.com", "role": "admin", "avatar": ""},
-            "driver@example.com": {"id": "u4", "name": "EV Driver", "email": "driver@example.com", "role": "user", "avatar": ""},
-        }
-        if login_id in demo_accounts:
-            demo_user = demo_accounts[login_id]
-            hashed = safe_hash(data.password)
-            user_doc = {**demo_user, "password": hashed}
-
     if not user_doc or not safe_verify(data.password, user_doc.get("password", "")):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

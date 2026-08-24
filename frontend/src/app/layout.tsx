@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   description: "Discover India's largest EV charging network with real-time availability, intelligent routing, and 5000+ charging stations. Power your electric vehicle journey with confidence.",
   keywords: "EV charging, electric vehicle, charging stations, India, real-time availability, EV network, electric car charging",
   authors: [{ name: "EV Station Finder Team" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   openGraph: {
     title: "EV Station Finder - India's Largest EV Charging Network",
@@ -42,7 +41,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-black via-gray-950 to-black overflow-x-hidden`}

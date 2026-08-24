@@ -72,7 +72,7 @@ export default function AdminDashboard() {
 
   // Auth guard — only admins
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) router.replace("/login");
+    if (!isAuthLoading && !isAuthenticated) router.replace("/");
     if (!isAuthLoading && isAuthenticated && user?.role !== "admin") router.replace("/dashboard");
   }, [isAuthLoading, isAuthenticated, user, router]);
 

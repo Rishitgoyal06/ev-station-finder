@@ -443,7 +443,23 @@ export default function DashboardPage() {
 
                       {/* Book button */}
                       <button
-                        onClick={() => s.available > 0 && router.push(`/stations/${s.id}`)}
+                        onClick={() => {
+                          if (s.available === 0) return;
+                          const params = new URLSearchParams({
+                            name: s.name,
+                            address: s.address || "",
+                            city: s.city || "",
+                            price: String(s.price),
+                            chargeTime: s.chargeTime || "45 mins",
+                            connectors: (s.connectors || [s.type || "Type 2"]).join(","),
+                            img: s.img || "",
+                            available: String(s.available),
+                            total: String(s.total),
+                            peakPower: s.type?.includes("DC") ? "150 kW" : "22 kW",
+                            powerType: s.type || "AC Charging",
+                          });
+                          router.push(`/stations/${encodeURIComponent(s.id)}?${params.toString()}`);
+                        }}
                         disabled={s.available === 0}
                         className={`ml-3 px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors flex-shrink-0 ${
                           s.available === 0

@@ -65,8 +65,31 @@ def create_token(user_id: str, email: str, name: str, role: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
+
+async def ensure_default_admin():
+    mode, collection = await get_users_collection()
+    admin_email = "admin@test.com"
+    admin_doc = {
+        "id": "admin_1",
+        "name": "Admin User",
+        "email": admin_email,
+        "password": safe_hash("password123"),
+        "role": "admin",
+        "avatar": "",
+        "createdAt": datetime.datetime.utcnow().isoformat()
+    }
+
+    if mode == "mongo":
+        existing = await collection.find_one({"email": admin_email})
+        if not existing:
+            await collection.insert_one(admin_doc)
+    else:
+        if admin_email not in collection:
+            collection[admin_email] = admin_doc
+
 @router.post("/register")
 async def register(data: RegisterSchema, response: Response):
+    await ensure_default_admin()
     mode, collection = await get_users_collection()
     user_email = data.email.lower().strip()
     role = normalize_role(data.role)
@@ -114,6 +137,7 @@ async def register(data: RegisterSchema, response: Response):
 
 @router.post("/login")
 async def login(data: LoginSchema, response: Response):
+    await ensure_default_admin()
     login_id = (data.email or data.username or "").lower().strip()
     if not login_id or not data.password:
         raise HTTPException(status_code=400, detail="Please enter email/username and password")
@@ -152,6 +176,7 @@ async def login(data: LoginSchema, response: Response):
 
 @router.post("/google")
 async def google_auth(data: GoogleAuthSchema, response: Response):
+    await ensure_default_admin()
     user_info = data.userInfo or {}
     email = (user_info.get("email") or "").lower().strip()
     name = user_info.get("name") or "Google User"
@@ -203,6 +228,7 @@ async def google_auth(data: GoogleAuthSchema, response: Response):
 
 @router.get("/status")
 async def auth_status(authorization: Optional[str] = Header(None), cookie: Optional[str] = Header(None)):
+    await ensure_default_admin()
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")

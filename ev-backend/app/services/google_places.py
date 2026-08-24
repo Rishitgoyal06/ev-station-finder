@@ -21,7 +21,10 @@ def fetch_text_search(query: str) -> dict:
 def fetch_place_details(place_id: str) -> dict:
     params = {
         "place_id": place_id,
-        "fields": "photos,formatted_phone_number",
+        "fields": (
+            "name,formatted_address,geometry,opening_hours,rating,website,"
+            "photos,formatted_phone_number"
+        ),
         "key": GOOGLE_API_KEY,
     }
     response = requests.get(PLACE_DETAILS_URL, params=params, timeout=5)

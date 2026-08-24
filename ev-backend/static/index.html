@@ -18,10 +18,44 @@
             overflow: hidden;
         }
 
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
         #map {
             height: 100vh;
             width: 100vw;
             z-index: 1;
+        }
+
+        body.embed-mode #map {
+            position: absolute;
+            inset: 0;
+            height: 100% !important;
+            width: 100% !important;
+        }
+
+        body.embed-mode > :not(#map) {
+            display: none !important;
+        }
+
+        html.embed-mode,
+        body.embed-mode {
+            height: 100% !important;
+            width: 100% !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body.embed-mode #map,
+        html.embed-mode #map {
+            min-height: 100% !important;
+        }
+
+        body.embed-mode .leaflet-control-attribution {
+            display: none !important;
         }
 
         .search-container {
@@ -248,6 +282,17 @@
             display: none;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        body.embed-mode .search-container,
+        body.embed-mode .controls,
+        body.embed-mode .results-panel,
+        body.embed-mode .loading {
+            display: none !important;
+        }
+
+        body.embed-mode {
+            background: #000;
         }
 
         .results-header {
@@ -534,13 +579,22 @@
                 this.userMarker = null;
                 this.currentResults = [];
                 this.routeLayer = null;
+                this.isEmbedMode = new URLSearchParams(window.location.search).get("embed") === "1";
                 this.init();
             }
 
             init() {
+                if (this.isEmbedMode) {
+                    document.body.classList.add("embed-mode");
+                    document.documentElement.classList.add("embed-mode");
+                }
                 this.initMap();
                 this.bindEvents();
-                this.requestLocation();
+                if (this.isEmbedMode) {
+                    this.initEmbeddedRoute();
+                } else {
+                    this.requestLocation();
+                }
                 this.initTheme();
             }
 
@@ -560,6 +614,18 @@
                 L.control.zoom({
                     position: 'bottomright'
                 }).addTo(this.map);
+
+                if (this.isEmbedMode) {
+                    const resizeMap = () => this.map && this.map.invalidateSize(false);
+                    requestAnimationFrame(resizeMap);
+                    setTimeout(resizeMap, 100);
+                    setTimeout(resizeMap, 500);
+                    setTimeout(resizeMap, 1000);
+                    window.addEventListener('resize', resizeMap);
+                    if (window.ResizeObserver) {
+                        new ResizeObserver(resizeMap).observe(document.getElementById('map'));
+                    }
+                }
             }
 
             bindEvents() {
@@ -580,6 +646,51 @@
 
             hideLoading() {
                 document.getElementById('loading').style.display = 'none';
+            }
+
+            async initEmbeddedRoute() {
+                const params = new URLSearchParams(window.location.search);
+                const originLat = parseFloat(params.get('lat'));
+                const originLng = parseFloat(params.get('lng'));
+                const destLat = parseFloat(params.get('dest_lat'));
+                const destLng = parseFloat(params.get('dest_lng'));
+                const stationName = params.get('station') || 'EV Charging Station';
+
+                if (![originLat, originLng, destLat, destLng].every(Number.isFinite)) {
+                    this.map.setView([20.5937, 78.9629], 5);
+                    return;
+                }
+
+                this.userLocation = { lat: originLat, lng: originLng };
+                this.updateUserMarker();
+
+                const evIcon = L.divIcon({
+                    className: 'ev-marker',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+                L.marker([destLat, destLng], { icon: evIcon })
+                    .addTo(this.map)
+                    .bindPopup(`<b>${stationName}</b>`);
+
+                try {
+                    const response = await fetch(
+                        `/directions?origin_lat=${originLat}&origin_lng=${originLng}&dest_lat=${destLat}&dest_lng=${destLng}&route_type=fastest`
+                    );
+                    const data = await response.json();
+                    data.station_name = stationName;
+                    this.displayRoute(data, 'fastest');
+                } catch (error) {
+                    this.routeLayer = L.polyline([[originLat, originLng], [destLat, destLng]], {
+                        color: '#FF5722',
+                        weight: 5,
+                        opacity: 0.8
+                    }).addTo(this.map);
+                }
+
+                const bounds = L.latLngBounds([[originLat, originLng], [destLat, destLng]]);
+                this.map.fitBounds(bounds, { padding: [40, 40] });
+                setTimeout(() => this.map.invalidateSize(), 100);
             }
 
             requestLocation() {

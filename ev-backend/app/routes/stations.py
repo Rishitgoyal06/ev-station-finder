@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from config import GOOGLE_API_KEY
 from app.services.google_places import fetch_nearby, fetch_text_search, fetch_place_details, build_photo_refs
 from app.utils.geo import calculate_distance, format_distance, estimate_travel_time
@@ -101,3 +101,32 @@ def search_places(
 @router.get("/navigate")
 def navigate(lat: float = Query(...), lng: float = Query(...)):
     return {"url": f"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}"}
+
+
+@router.get("/stations/{place_id}")
+def get_station_details(place_id: str):
+    if not GOOGLE_API_KEY:
+        raise HTTPException(status_code=503, detail="Google API key not configured")
+
+    details_data = fetch_place_details(place_id)
+    if details_data.get("status") != "OK":
+        raise HTTPException(status_code=404, detail="Station not found")
+
+    result = details_data.get("result", {})
+    photo_urls = [f"/photo?ref={ref}" for ref in build_photo_refs(result)]
+    geometry = result.get("geometry", {}).get("location", {})
+
+    return {
+        "station": {
+            "place_id": place_id,
+            "name": result.get("name"),
+            "address": result.get("formatted_address"),
+            "latitude": geometry.get("lat"),
+            "longitude": geometry.get("lng"),
+            "rating": result.get("rating"),
+            "open_now": result.get("opening_hours", {}).get("open_now"),
+            "website": result.get("website"),
+            "phone_no": result.get("formatted_phone_number"),
+            "photo_urls": photo_urls,
+        }
+    }

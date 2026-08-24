@@ -34,7 +34,7 @@ export default function StationsPage() {
     const fetchStations = async (lat: number, lng: number) => {
       setIsStationsLoading(true);
       try {
-        const res = await fetch(`http://localhost:8000/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
+        const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
         const data = await res.json();
         
         if (data.results && data.results.length > 0) {
@@ -64,7 +64,7 @@ export default function StationsPage() {
               price: 12 + (seed % 10),
               chargeTime: isDC ? "35 mins" : "60 mins",
               verified: seed % 3 !== 0,
-              img: s.photo_urls && s.photo_urls.length > 0 ? `http://localhost:8000${s.photo_urls[0]}` : imgs[seed % imgs.length]
+              img: s.photo_urls && s.photo_urls.length > 0 ? `http://localhost:8001${s.photo_urls[0]}` : imgs[seed % imgs.length]
             };
           });
           setStationsList(mapped);
@@ -368,7 +368,22 @@ export default function StationsPage() {
                           </div>
                           <div className="flex flex-col gap-1.5 items-end">
                             <button
-                              onClick={() => router.push(`/stations/${s.id}`)}
+                              onClick={() => {
+                                const params = new URLSearchParams({
+                                  name: s.name,
+                                  address: s.address,
+                                  city: s.city || "",
+                                  price: String(s.price),
+                                  chargeTime: s.chargeTime,
+                                  connectors: s.connectors.join(","),
+                                  img: s.img,
+                                  available: String(s.available),
+                                  total: String(s.total),
+                                  peakPower: s.types[0]?.includes("DC") ? "150 kW" : "22 kW",
+                                  powerType: s.types[0] || "AC Charging",
+                                });
+                                router.push(`/stations/${encodeURIComponent(s.id)}?${params.toString()}`);
+                              }}
                               disabled={s.available === 0}
                               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all ${
                                 s.available === 0 ? "bg-[#1a1a1a] text-[#444] cursor-not-allowed border border-[#2a2a2a]"

@@ -78,7 +78,7 @@ export default function OwnerDashboard() {
   const fetchNearbyStations = async (lat: number, lng: number) => {
     setIsLoadingStations(true);
     try {
-      const res = await fetch(`http://localhost:8000/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
+      const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
       const data = await res.json();
       setStations(data.results || []);
     } catch (e) {

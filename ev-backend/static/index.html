@@ -701,6 +701,15 @@
                 this.markers.forEach(marker => this.map.removeLayer(marker));
                 this.markers = [];
 
+                // Send search results to parent Next.js page so Nearby Stations list updates in real-time
+                try {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: "EV_STATIONS_UPDATED", stations: stations }, "*");
+                    }
+                } catch (e) {
+                    console.error("PostMessage error:", e);
+                }
+
                 if (stations.length === 0) return;
 
                 const bounds = L.latLngBounds();

@@ -1,72 +1,73 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
+
+type FavoriteStation = {
+  id: string | number;
+  name: string;
+  nameHighlight?: string;
+  address: string;
+  distance?: string;
+  available?: number;
+  total?: number;
+  price?: number;
+  rating?: number;
+  reviews?: number;
+  amenities?: string[];
+  image?: string;
+  lastVisited?: string;
+  totalVisits?: number;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  connectors?: string[];
+  chargeTime?: string;
+  type?: string;
+};
 
 export default function FavoritesPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [favorites, setFavorites] = useState<FavoriteStation[]>([]);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "empty">("loading");
+  const [hasLocalDraft, setHasLocalDraft] = useState(false);
 
-  if (!isAuthenticated) {
-    router.replace("/");
-    return null;
-  }
-
-  const favoriteStations = [
-    {
-      id: 1,
-      name: "GreenCharge Hub",
-      nameHighlight: "Whitefield",
-      address: "ITPL Main Road, Whitefield, Bengaluru",
-      distance: "2.3 km",
-      available: 3,
-      total: 8,
-      price: 18,
-      rating: 4.9,
-      reviews: 120,
-      amenities: ["Wi-Fi", "Café", "Restroom"],
-      image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&q=85",
-      lastVisited: "2 days ago",
-      totalVisits: 12
-    },
-    {
-      id: 2,
-      name: "VoltSpark Center",
-      nameHighlight: "HSR Layout",
-      address: "Sector 2, HSR Layout, Bengaluru",
-      distance: "4.7 km", 
-      available: 1,
-      total: 6,
-      price: 16,
-      rating: 4.6,
-      reviews: 68,
-      amenities: ["Wi-Fi", "Parking"],
-      image: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&q=85",
-      lastVisited: "1 week ago",
-      totalVisits: 5
-    },
-    {
-      id: 3,
-      name: "ChargeIQ Station",
-      nameHighlight: "Koramangala", 
-      address: "5th Block, Koramangala, Bengaluru",
-      distance: "3.1 km",
-      available: 4,
-      total: 10,
-      price: 20,
-      rating: 4.8,
-      reviews: 95,
-      amenities: ["Wi-Fi", "CCTV", "24/7"],
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=85",
-      lastVisited: "3 days ago", 
-      totalVisits: 8
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/");
+      return;
     }
-  ];
+
+    try {
+      const raw = localStorage.getItem("chargeiq_favorites");
+      if (raw) {
+        const parsed = JSON.parse(raw) as FavoriteStation[];
+        setFavorites(Array.isArray(parsed) ? parsed : []);
+        setLoadState((Array.isArray(parsed) && parsed.length > 0) ? "ready" : "empty");
+      } else {
+        setFavorites([]);
+        setLoadState("empty");
+      }
+      setHasLocalDraft(localStorage.getItem("chargeiq_favorites_draft") === "1");
+    } catch {
+      setFavorites([]);
+      setLoadState("empty");
+    }
+  }, [isAuthenticated, router]);
+
+  const favoriteStations = useMemo(() => favorites, [favorites]);
 
   const handleRemoveFavorite = (stationId: number) => {
-    // Here you would make an API call to remove from favorites
-    console.log(`Removing station ${stationId} from favorites`);
+    const next = favorites.filter((station) => String(station.id) !== String(stationId));
+    setFavorites(next);
+    setLoadState(next.length > 0 ? "ready" : "empty");
+    localStorage.setItem("chargeiq_favorites", JSON.stringify(next));
+    if (next.length === 0) {
+      localStorage.removeItem("chargeiq_favorites_draft");
+      setHasLocalDraft(false);
+    }
   };
 
   const StationCard = ({ station, isListView = false }: { station: typeof favoriteStations[0], isListView?: boolean }) => (
@@ -203,11 +204,14 @@ export default function FavoritesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
-            <div>
-              <h1 className="text-xl font-bold">Favorite Stations</h1>
-              <p className="text-sm text-gray-400">{favoriteStations.length} saved stations</p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold">Favorite Stations</h1>
+            <p className="text-sm text-gray-400">
+              {favoriteStations.length} saved stations
+              {hasLocalDraft ? " • local draft" : ""}
+            </p>
           </div>
+        </div>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 p-1 bg-[#1f1f1f] rounded-lg">
@@ -306,7 +310,20 @@ export default function FavoritesPage() {
         </div>
 
         {/* Stations List */}
-        {favoriteStations.length > 0 ? (
+        {loadState === "loading" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5 animate-pulse">
+                <div className="h-48 rounded-lg bg-[#1f1f1f] mb-4" />
+                <div className="h-4 bg-[#1f1f1f] rounded w-2/3 mb-3" />
+                <div className="h-3 bg-[#1f1f1f] rounded w-1/2 mb-6" />
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((j) => <div key={j} className="h-12 bg-[#1f1f1f] rounded" />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : favoriteStations.length > 0 ? (
           <div className={
             viewMode === "grid" 
               ? "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" 
@@ -325,8 +342,13 @@ export default function FavoritesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">No Favorite Stations</h3>
-            <p className="text-gray-400 mb-6">Add stations to your favorites for quick access.</p>
+            <h3 className="text-lg font-semibold text-white mb-2">No saved favorites yet</h3>
+            <p className="text-gray-400 mb-2">
+              Add stations from the live station pages to keep them here for quick access.
+            </p>
+            <p className="text-xs text-gray-500 mb-6">
+              This screen now shows real saved data from local storage rather than placeholder favorites.
+            </p>
             <button 
               onClick={() => router.push('/stations')}
               className="bg-green-500 hover:bg-green-400 text-black px-6 py-3 rounded-xl font-semibold transition-colors"

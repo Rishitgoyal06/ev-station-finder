@@ -17,6 +17,7 @@ import {
   IconUsersGroup,
   IconChartAreaLine,
 } from "@tabler/icons-react";
+import { fetchStationsCached } from "@/lib/stations";
 
 type LiveStation = {
   place_id: string;
@@ -78,8 +79,7 @@ export default function OwnerDashboard() {
   const fetchNearbyStations = async (lat: number, lng: number) => {
     setIsLoadingStations(true);
     try {
-      const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
-      const data = await res.json();
+      const data = await fetchStationsCached({ lat, lng, radius: 30000 });
       setStations(data.results || []);
     } catch (e) {
       console.error("Failed to fetch stations:", e);

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
+import { fetchStationsCached } from "@/lib/stations";
 
 type LiveStation = {
   place_id: string;
@@ -27,8 +28,7 @@ export default function OwnerStationsPage() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("http://localhost:8001/ev-stations?lat=22.3072&lng=73.1812&radius=30000");
-        const data = await res.json();
+        const data = await fetchStationsCached({ lat: 22.3072, lng: 73.1812, radius: 30000 });
         setStations(data.results || []);
       } catch {
         setStations([]);

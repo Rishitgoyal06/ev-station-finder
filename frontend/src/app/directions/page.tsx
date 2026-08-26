@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { BACKEND_BASE_URL } from "@/lib/backend";
 
 // Dynamically import map component to avoid SSR issues
 const DirectionsMap = dynamic(() => import("@/components/DirectionsMap"), { ssr: false });
@@ -21,10 +22,13 @@ function DirectionsContent() {
   const stationAddress = searchParams?.get("address") || "";
   const stationLat = parseFloat(searchParams?.get("lat") || "12.9716");
   const stationLng = parseFloat(searchParams?.get("lng") || "77.5946");
-
-  const routeDestination = Number.isFinite(stationLat) && Number.isFinite(stationLng)
-    ? `${stationLat},${stationLng}`
-    : "12.9716,77.5946";
+  const [routeData, setRouteData] = useState({
+    distance: "4.2 km",
+    duration: "12 min",
+    traffic: "Light traffic",
+    routeType: "Fastest",
+    benefits: "",
+  });
 
   useEffect(() => {
     // Get user's current location
@@ -42,6 +46,41 @@ function DirectionsContent() {
       setUserLocation([12.9716, 77.5946]);
     }
   }, []);
+
+  useEffect(() => {
+    if (!userLocation || !Number.isFinite(stationLat) || !Number.isFinite(stationLng)) return;
+
+    const loadRoute = async () => {
+      try {
+        const params = new URLSearchParams({
+          origin_lat: String(userLocation[0]),
+          origin_lng: String(userLocation[1]),
+          dest_lat: String(stationLat),
+          dest_lng: String(stationLng),
+          route_type: "fastest",
+        });
+        const res = await fetch(`${BACKEND_BASE_URL}/directions?${params.toString()}`);
+        const data = await res.json();
+        setRouteData({
+          distance: data.distance || "0 km",
+          duration: data.duration || "0 min",
+          traffic: data.benefits || "Light traffic",
+          routeType: data.route_type || "Fastest",
+          benefits: data.benefits || "",
+        });
+      } catch {
+        setRouteData({
+          distance: "0 km",
+          duration: "0 min",
+          traffic: "Light traffic",
+          routeType: "Fastest",
+          benefits: "",
+        });
+      }
+    };
+
+    loadRoute();
+  }, [stationLat, stationLng, userLocation]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col overflow-hidden">
@@ -91,22 +130,22 @@ function DirectionsContent() {
                 <circle cx="12" cy="12" r="9"/>
                 <path d="M12 7v5l3 3"/>
               </svg>
-              <span className="text-white font-semibold">{routeInfo.duration}</span>
+              <span className="text-white font-semibold">{routeData.duration}</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
               </svg>
-              <span className="text-white font-semibold">{routeInfo.distance}</span>
+              <span className="text-white font-semibold">{routeData.distance}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-gray-400 text-sm">{routeInfo.traffic}</span>
+              <span className="text-gray-400 text-sm">{routeData.traffic}</span>
             </div>
           </div>
           
           <button 
-            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${routeDestination}`, "_blank")}
+            onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${stationLat},${stationLng}`, "_blank")}
             className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -124,7 +163,6 @@ function DirectionsContent() {
             userLocation={userLocation}
             stationLocation={[stationLat, stationLng]}
             stationName={stationName}
-            onRouteCalculated={setRouteInfo}
           />
         )}
         

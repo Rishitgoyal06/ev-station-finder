@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import dynamic from "next/dynamic";
+import { fetchStationsCached } from "@/lib/stations";
 
 const StationsMap = dynamic(() => import("@/components/DashboardMap"), { ssr: false });
 
@@ -34,8 +35,7 @@ export default function StationsPage() {
     const fetchStations = async (lat: number, lng: number) => {
       setIsStationsLoading(true);
       try {
-        const res = await fetch(`http://localhost:8001/ev-stations?lat=${lat}&lng=${lng}&radius=30000`);
-        const data = await res.json();
+        const data = await fetchStationsCached({ lat, lng, radius: 30000 });
         
         if (data.results && data.results.length > 0) {
           const mapped = data.results.map((s: any, i: number) => {

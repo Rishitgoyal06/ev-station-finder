@@ -21,15 +21,7 @@ def _enrich_place(place: dict, user_lat: float | None, user_lng: float | None) -
         else None
     )
 
-    photo_urls = []
-    phone_number = None
     place_id = place.get("place_id")
-    if place_id:
-        details_data = fetch_place_details(place_id)
-        if details_data.get("status") == "OK":
-            result = details_data.get("result", {})
-            photo_urls = [f"/photo?ref={ref}" for ref in build_photo_refs(result)]
-            phone_number = result.get("formatted_phone_number")
 
     return {
         "name": place.get("name"),
@@ -42,8 +34,8 @@ def _enrich_place(place: dict, user_lat: float | None, user_lng: float | None) -
         "distance_m": round(distance) if distance is not None else None,
         "distance_str": format_distance(round(distance)) if distance is not None else None,
         "estimated_time": estimate_travel_time(distance) if distance is not None else None,
-        "photo_urls": photo_urls,
-        "phone_no": phone_number,
+        "photo_urls": [],
+        "phone_no": None,
     }
 
 

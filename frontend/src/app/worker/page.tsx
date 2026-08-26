@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
+import { fetchStationsCached } from "@/lib/stations";
 
 type Booking = {
   id: string;
@@ -77,8 +78,7 @@ export default function WorkerDashboard() {
     const loadStations = async () => {
       setIsStationsLoading(true);
       const fallback = async () => {
-        const res = await fetch("http://localhost:8001/ev-stations?lat=22.3072&lng=73.1812&radius=30000");
-        const data = await res.json();
+        const data = await fetchStationsCached({ lat: 22.3072, lng: 73.1812, radius: 30000 });
         const results = data.results || [];
         setStations(results);
         setSelectedStation(results[0]?.place_id || "");
@@ -93,8 +93,7 @@ export default function WorkerDashboard() {
         navigator.geolocation.getCurrentPosition(
           async ({ coords }) => {
             try {
-              const res = await fetch(`http://localhost:8001/ev-stations?lat=${coords.latitude}&lng=${coords.longitude}&radius=30000`);
-              const data = await res.json();
+              const data = await fetchStationsCached({ lat: coords.latitude, lng: coords.longitude, radius: 30000 });
               const results = data.results || [];
               setStations(results);
               setSelectedStation(results[0]?.place_id || "");

@@ -8,7 +8,6 @@ from passlib.context import CryptContext
 from config import JWT_SECRET
 from app.db import get_users_collection
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
 import bcrypt
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -47,6 +46,20 @@ class GoogleAuthSchema(BaseModel):
     userInfo: Optional[dict] = None
     role: Optional[str] = "user"
 
+class UpdateProfileSchema(BaseModel):
+    name: Optional[str] = None
+    avatar: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    vehicleModel: Optional[str] = None
+    vehicleNumber: Optional[str] = None
+    preferredConnector: Optional[str] = None
+    notifications: Optional[bool] = None
+    locationSharing: Optional[bool] = None
+    emailUpdates: Optional[bool] = None
+    smsAlerts: Optional[bool] = None
+    darkMode: Optional[bool] = None
+
 def normalize_role(role: Optional[str]) -> str:
     r = (role or "").lower()
     if r in ("customer", "user", "driver"):
@@ -56,6 +69,28 @@ def normalize_role(role: Optional[str]) -> str:
     if r in ("admin", "worker"):
         return r
     return "user"
+
+def _build_profile(user_doc: dict) -> dict:
+    return {
+        "id": user_doc.get("id"),
+        "name": user_doc.get("name", ""),
+        "email": user_doc.get("email", ""),
+        "role": normalize_role(user_doc.get("role")),
+        "avatar": user_doc.get("avatar", ""),
+        "phone": user_doc.get("phone", ""),
+        "address": user_doc.get("address", ""),
+        "vehicleModel": user_doc.get("vehicleModel", ""),
+        "vehicleNumber": user_doc.get("vehicleNumber", ""),
+        "preferredConnector": user_doc.get("preferredConnector", "CCS2"),
+        "preferences": user_doc.get("preferences", {
+            "notifications": True,
+            "locationSharing": True,
+            "emailUpdates": False,
+            "smsAlerts": True,
+            "darkMode": True,
+        }),
+        "createdAt": user_doc.get("createdAt"),
+    }
 
 def create_token(user_id: str, email: str, name: str, role: str) -> str:
     payload = {
@@ -264,6 +299,7 @@ async def logout(response: Response):
     response.delete_cookie("chargeiq_token", path="/")
     return {"ok": True}
 
+<<<<<<< HEAD
 class ProfileUpdateSchema(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
@@ -278,12 +314,21 @@ async def get_profile(authorization: Optional[str] = Header(None), cookie: Optio
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
+=======
+@router.get("/profile")
+async def profile(authorization: Optional[str] = Header(None), cookie: Optional[str] = Header(None)):
+    await ensure_default_admin()
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+      token = authorization.replace("Bearer ", "")
+>>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)
     elif cookie and "chargeiq_token=" in cookie:
         for part in cookie.split(";"):
             part = part.strip()
             if part.startswith("chargeiq_token="):
                 token = part.split("chargeiq_token=")[1]
                 break
+<<<<<<< HEAD
 
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -296,11 +341,24 @@ async def get_profile(authorization: Optional[str] = Header(None), cookie: Optio
         raise HTTPException(status_code=401, detail="Invalid token")
 
     mode, collection = await get_users_collection()
+=======
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    mode, collection = await get_users_collection()
+    user_id = payload.get("userId")
+    email = (payload.get("email") or "").lower().strip()
+>>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)
     user_doc = None
     if mode == "mongo":
         user_doc = await collection.find_one({"$or": [{"id": user_id}, {"email": email}]})
     else:
         user_doc = collection.get(email)
+<<<<<<< HEAD
 
     if not user_doc:
         user_doc = {
@@ -348,6 +406,24 @@ async def get_profile(authorization: Optional[str] = Header(None), cookie: Optio
 
 @router.put("/profile")
 async def update_profile(data: ProfileUpdateSchema, authorization: Optional[str] = Header(None), cookie: Optional[str] = Header(None)):
+=======
+        if not user_doc:
+            for item in collection.values():
+                if item.get("id") == user_id:
+                    user_doc = item
+                    break
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"ok": True, "user": _build_profile(user_doc)}
+
+@router.put("/profile")
+async def update_profile(
+    data: UpdateProfileSchema,
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    await ensure_default_admin()
+>>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
@@ -357,6 +433,7 @@ async def update_profile(data: ProfileUpdateSchema, authorization: Optional[str]
             if part.startswith("chargeiq_token="):
                 token = part.split("chargeiq_token=")[1]
                 break
+<<<<<<< HEAD
 
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -407,3 +484,41 @@ async def update_profile(data: ProfileUpdateSchema, authorization: Optional[str]
     }
 
     return {"ok": True, "profile": user_data}
+=======
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    mode, collection = await get_users_collection()
+    email = (payload.get("email") or "").lower().strip()
+    if mode == "mongo":
+        user_doc = await collection.find_one({"$or": [{"id": payload.get("userId")}, {"email": email}]})
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        updates = {k: v for k, v in data.model_dump().items() if v is not None}
+        if "preferredConnector" in updates and not updates["preferredConnector"]:
+            updates.pop("preferredConnector")
+        if any(k in updates for k in ("notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode")):
+            pref_updates = {k: updates.pop(k) for k in list(updates.keys()) if k in ("notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode")}
+            existing_prefs = user_doc.get("preferences", {})
+            existing_prefs.update(pref_updates)
+            updates["preferences"] = existing_prefs
+        if updates:
+            await collection.update_one({"_id": user_doc["_id"]}, {"$set": updates})
+    else:
+        user_doc = collection.get(email)
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        updates = {k: v for k, v in data.model_dump().items() if v is not None}
+        pref_updates = {k: updates.pop(k) for k in list(updates.keys()) if k in ("notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode")}
+        user_doc.update(updates)
+        if pref_updates:
+            prefs = user_doc.get("preferences", {})
+            prefs.update(pref_updates)
+            user_doc["preferences"] = prefs
+        collection[email] = user_doc
+    return {"ok": True, "user": _build_profile(user_doc)}
+>>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)

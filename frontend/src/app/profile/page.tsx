@@ -1,5 +1,5 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 
@@ -11,8 +11,9 @@ function ProfileContent() {
   const initialTab = searchParams?.get("tab") === "wallet" ? "wallet" : "profile";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Real data from auth context, editable fields layered on top
+  // Real data from FastAPI backend / MongoDB Atlas
   const [profileData, setProfileData] = useState({
     phone: "",
     address: "",
@@ -28,6 +29,71 @@ function ProfileContent() {
     smsAlerts: true,
     darkMode: true,
   });
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/auth/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.profile) {
+            setProfileData({
+              phone: data.profile.phone || "",
+              address: data.profile.address || "",
+              vehicleModel: data.profile.vehicleModel || "",
+              vehicleNumber: data.profile.vehicleNumber || "",
+              preferredConnector: data.profile.preferredConnector || "CCS2",
+            });
+            if (data.profile.preferences) {
+              setPreferences(prev => ({ ...prev, ...data.profile.preferences }));
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      }
+    }
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated]);
+
+  const handleSaveProfile = async () => {
+    if (isEditing) {
+      setIsSaving(true);
+      try {
+        await fetch("/api/auth/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...profileData,
+            preferences,
+          }),
+        });
+      } catch (err) {
+        console.error("Error saving profile:", err);
+      } finally {
+        setIsSaving(false);
+        setIsEditing(false);
+      }
+    } else {
+      setIsEditing(true);
+    }
+  };
+
+  const handleTogglePreference = async (key: string) => {
+    const newPrefs = { ...preferences, [key]: !preferences[key as keyof typeof preferences] };
+    setPreferences(newPrefs);
+    try {
+      await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: newPrefs }),
+      });
+    } catch (err) {
+      console.error("Error saving preference:", err);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -103,12 +169,13 @@ function ProfileContent() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold">Profile Information</h2>
                   <button
-                    onClick={() => setIsEditing(!isEditing)}
+                    disabled={isSaving}
+                    onClick={handleSaveProfile}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       isEditing ? "bg-green-500 hover:bg-green-400 text-black" : "bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a]"
                     }`}
                   >
-                    {isEditing ? "Save Changes" : "Edit Profile"}
+                    {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Edit Profile"}
                   </button>
                 </div>
 

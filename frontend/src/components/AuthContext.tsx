@@ -8,6 +8,18 @@ export interface UserProfile {
   email: string;
   role: string;
   avatar?: string;
+  phone?: string;
+  address?: string;
+  vehicleModel?: string;
+  vehicleNumber?: string;
+  preferredConnector?: string;
+  preferences?: {
+    notifications?: boolean;
+    locationSharing?: boolean;
+    emailUpdates?: boolean;
+    smsAlerts?: boolean;
+    darkMode?: boolean;
+  };
 }
 
 interface AuthContextType {
@@ -40,13 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuthStatus();
   }, []);
 
+  const normalizeUser = (data: any): UserProfile => ({
+    ...data,
+    role: normalizeRole(data.role),
+  });
+
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch("/api/auth/status");
+      const response = await fetch("/api/auth/profile");
       const data = await response.json();
-      if (data.authenticated && data.user) {
+      if (data.ok && data.user) {
         setIsAuthenticated(true);
-        setUser({ ...data.user, role: normalizeRole(data.user.role) });
+        setUser(normalizeUser(data.user));
       } else {
         setIsAuthenticated(false);
         setUser(null);
@@ -70,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       if (data.ok && data.user) {
-        const normalizedUser = { ...data.user, role: normalizeRole(data.user.role) };
+        const normalizedUser = normalizeUser(data.user);
         setIsAuthenticated(true);
         setUser(normalizedUser);
         return { ok: true, user: normalizedUser };
@@ -97,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       if (data.ok && data.user) {
-        const normalizedUser = { ...data.user, role: normalizeRole(data.user.role) };
+        const normalizedUser = normalizeUser(data.user);
         setIsAuthenticated(true);
         setUser(normalizedUser);
         return { ok: true, user: normalizedUser };
@@ -119,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       if (data.ok && data.user) {
-        const normalizedUser = { ...data.user, role: normalizeRole(data.user.role) };
+        const normalizedUser = normalizeUser(data.user);
         setIsAuthenticated(true);
         setUser(normalizedUser);
         return { ok: true, user: normalizedUser };

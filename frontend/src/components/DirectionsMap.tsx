@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo } from "react";
+import { BACKEND_BASE_URL } from "@/lib/backend";
 
 interface DirectionsMapProps {
   userLocation: [number, number];
@@ -44,9 +45,8 @@ export default function DirectionsMap({
       dest_lng: String(stationLocation[1]),
       station: stationName,
       embed: "1",
-      v: "2",
     });
-    return `http://localhost:8001/static/index.html?${params.toString()}`;
+    return `${BACKEND_BASE_URL}/static/index.html?${params.toString()}`;
   }, [stationLocation, stationName, userLocation]);
 
   return (

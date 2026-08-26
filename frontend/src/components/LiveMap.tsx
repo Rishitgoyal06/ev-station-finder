@@ -1,10 +1,6 @@
 "use client";
-import React, { useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-
-const DynamicMap = dynamic(() => import('./MapComponent'), {
-  ssr: false,
-});
+import React from 'react';
+import { BACKEND_BASE_URL } from "@/lib/backend";
 
 export function LiveMap() {
   return (
@@ -30,7 +26,12 @@ export function LiveMap() {
 
           <div className="lg:col-span-8">
             <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.35)] overflow-hidden">
-              <DynamicMap />
+              <iframe
+                src={`${BACKEND_BASE_URL}/?embed=1`}
+                title="Live EV stations map"
+                className="w-full h-[300px] sm:h-[350px] md:h-[400px] border-0"
+                allow="geolocation"
+              />
             </div>
           </div>
         </div>

@@ -59,7 +59,8 @@ export default function WorkerDashboard() {
   useEffect(() => {
     const loadBookings = async () => {
       try {
-        const res = await fetch("/api/bookings");
+        // Workers need all station bookings, not just their own
+        const res = await fetch("/api/admin/bookings");
         if (res.ok) {
           const data = await res.json();
           setBookings(data.bookings || []);

@@ -343,7 +343,7 @@ export default function StationsPage() {
                           </button>
                           <div className="flex flex-wrap gap-1.5">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${typeColor}`}>{s.types[0]}</span>
-                            {s.connectors.map(c => <span key={c} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#1a1a1a] border border-[#2a2a2a] text-[#aaa]">{c}</span>)}
+                            {s.connectors.map((c: string) => <span key={c} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#1a1a1a] border border-[#2a2a2a] text-[#aaa]">{c}</span>)}
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#1a1a1a] border border-[#2a2a2a] text-[#aaa]">{s.hours}</span>
                           </div>
                         </div>

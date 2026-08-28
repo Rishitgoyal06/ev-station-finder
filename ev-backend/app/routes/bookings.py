@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
+import jwt
 import uuid
 import datetime
+from config import JWT_SECRET
 from app.db import get_bookings_collection, get_slots_collection
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
 
+
 class BookingCreateSchema(BaseModel):
-    userId: Optional[str] = "u1"
     stationId: Optional[str] = None
     stationPlaceId: Optional[str] = None
     stationName: str
@@ -27,6 +29,26 @@ class BookingCreateSchema(BaseModel):
     tax: Optional[float] = None
     ratePerKwh: Optional[float] = None
     energyEstimateKwh: Optional[float] = None
+
+
+def _extract_user_id(authorization: Optional[str], cookie: Optional[str]) -> Optional[str]:
+    """Extract userId from JWT in Authorization header or cookie. Returns None if invalid/missing."""
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    elif cookie and "chargeiq_token=" in cookie:
+        for part in cookie.split(";"):
+            part = part.strip()
+            if part.startswith("chargeiq_token="):
+                token = part.split("chargeiq_token=")[1]
+                break
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        return payload.get("userId")
+    except Exception:
+        return None
 
 
 def _normalize_booking_slot(value: str | None) -> str:
@@ -74,48 +96,89 @@ async def _set_slot_status(slot_id: str, status: str):
         if slot:
             await slots.update_one({"id": slot_id}, {"$set": {"status": status}})
         else:
-            await slots.insert_one({"id": slot_id, "stationId": "1", "name": f"Slot {slot_id}", "status": status, "type": "CCS2", "power": "150 kW"})
+            await slots.insert_one({
+                "id": slot_id,
+                "stationId": "1",
+                "name": f"Slot {slot_id}",
+                "status": status,
+                "type": "CCS2",
+                "power": "150 kW"
+            })
     else:
-        slots[slot_id] = slots.get(slot_id, {"id": slot_id, "stationId": "1", "name": f"Slot {slot_id}", "type": "CCS2", "power": "150 kW"})
+        slots[slot_id] = slots.get(slot_id, {
+            "id": slot_id,
+            "stationId": "1",
+            "name": f"Slot {slot_id}",
+            "type": "CCS2",
+            "power": "150 kW"
+        })
         slots[slot_id]["status"] = status
 
 
 @router.get("")
 @router.get("/")
-async def get_bookings():
+async def get_bookings(
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    user_id = _extract_user_id(authorization, cookie)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     mode, collection = await get_bookings_collection()
-    
+
     if mode == "mongo":
-        cursor = collection.find({})
-        bookings = await cursor.to_list(length=100)
+        cursor = collection.find({"userId": user_id})
+        bookings = await cursor.to_list(length=200)
         for b in bookings:
-            if "_id" in b:
-                del b["_id"]
-        return {"bookings": bookings}
+            b.pop("_id", None)
     else:
-        return {"bookings": list(collection.values())}
+        bookings = [b for b in collection.values() if b.get("userId") == user_id]
+
+    return {"bookings": bookings}
+
 
 @router.get("/{booking_id}")
-async def get_booking_by_id(booking_id: str):
+async def get_booking_by_id(
+    booking_id: str,
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    user_id = _extract_user_id(authorization, cookie)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     mode, collection = await get_bookings_collection()
-    
+
     booking = None
     if mode == "mongo":
         booking = await collection.find_one({"id": booking_id})
-        if booking and "_id" in booking:
-            del booking["_id"]
+        if booking:
+            booking.pop("_id", None)
     else:
         booking = collection.get(booking_id)
-
 
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
 
+    # Ensure the booking belongs to the requesting user
+    if booking.get("userId") != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
     return {"booking": booking}
+
 
 @router.post("")
 @router.post("/")
-async def create_booking(data: BookingCreateSchema):
+async def create_booking(
+    data: BookingCreateSchema,
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    user_id = _extract_user_id(authorization, cookie)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     mode, collection = await get_bookings_collection()
     booking_id = f"BK{uuid.uuid4().hex[:6].upper()}"
     now_str = datetime.datetime.utcnow().isoformat() + "Z"
@@ -126,12 +189,18 @@ async def create_booking(data: BookingCreateSchema):
     station_id = data.stationId or None
     station_place_id = data.stationPlaceId or None
 
-    if await _booking_conflicts(mode, collection, station_id, station_place_id, data.stationName, booking_date, booking_time, slot_number):
-        raise HTTPException(status_code=409, detail="That slot is already booked for the selected date and time")
-    
+    if await _booking_conflicts(
+        mode, collection, station_id, station_place_id,
+        data.stationName, booking_date, booking_time, slot_number
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="That slot is already booked for the selected date and time"
+        )
+
     booking_doc = {
         "id": booking_id,
-        "userId": data.userId or "u1",
+        "userId": user_id,  # always from token — never from request body
         "stationId": station_id,
         "stationPlaceId": station_place_id,
         "stationName": data.stationName,
@@ -153,7 +222,7 @@ async def create_booking(data: BookingCreateSchema):
         "paymentMethod": data.paymentMethod or "UPI",
         "transactionId": f"txn_{uuid.uuid4().hex[:8]}",
         "bookedAt": now_str,
-        "instructions": data.instructions or "Please plug in charger within 10 minutes of arrival."
+        "instructions": data.instructions or "Please plug in charger within 10 minutes of arrival.",
     }
 
     if mode == "mongo":
@@ -167,7 +236,15 @@ async def create_booking(data: BookingCreateSchema):
 
 
 @router.delete("/{booking_id}")
-async def cancel_booking(booking_id: str):
+async def cancel_booking(
+    booking_id: str,
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    user_id = _extract_user_id(authorization, cookie)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     mode, collection = await get_bookings_collection()
     booking = None
 
@@ -175,14 +252,17 @@ async def cancel_booking(booking_id: str):
         booking = await collection.find_one({"id": booking_id})
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
+        if booking.get("userId") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
         await collection.update_one({"id": booking_id}, {"$set": {"status": "cancelled"}})
         booking["status"] = "cancelled"
-        if "_id" in booking:
-            del booking["_id"]
+        booking.pop("_id", None)
     else:
         booking = collection.get(booking_id)
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
+        if booking.get("userId") != user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
         booking["status"] = "cancelled"
 
     slot_number = booking.get("slotNumber")

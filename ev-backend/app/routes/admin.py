@@ -1,7 +1,34 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Header
+from typing import Optional
+import jwt
+from config import JWT_SECRET
 from app.db import get_users_collection, get_bookings_collection, get_slots_collection
 
 router = APIRouter(tags=["Admin & Summary"])
+
+PRIVILEGED_ROLES = {"admin", "owner", "worker"}
+
+def _require_privileged(authorization: Optional[str], cookie: Optional[str]) -> str:
+    """Decode JWT and require admin/owner/worker role. Returns role string."""
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+    elif cookie and "chargeiq_token=" in cookie:
+        for part in cookie.split(";"):
+            part = part.strip()
+            if part.startswith("chargeiq_token="):
+                token = part.split("chargeiq_token=")[1]
+                break
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    role = (payload.get("role") or "").lower()
+    if role not in PRIVILEGED_ROLES:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return role
 
 @router.get("/summary")
 async def get_summary():
@@ -98,3 +125,23 @@ async def get_admin_users():
         ]
 
     return {"users": users_list}
+
+@router.get("/admin/bookings")
+async def get_all_bookings(
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    """Return all bookings — accessible only to admin, owner, and worker roles."""
+    _require_privileged(authorization, cookie)
+
+    b_mode, b_coll = await get_bookings_collection()
+
+    if b_mode == "mongo":
+        cursor = b_coll.find({})
+        bookings = await cursor.to_list(length=500)
+        for b in bookings:
+            b.pop("_id", None)
+    else:
+        bookings = list(b_coll.values())
+
+    return {"bookings": bookings}

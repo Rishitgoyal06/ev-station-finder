@@ -299,121 +299,45 @@ async def logout(response: Response):
     response.delete_cookie("chargeiq_token", path="/")
     return {"ok": True}
 
-<<<<<<< HEAD
-class ProfileUpdateSchema(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    address: Optional[str] = None
-    vehicleModel: Optional[str] = None
-    vehicleNumber: Optional[str] = None
-    preferredConnector: Optional[str] = None
-    preferences: Optional[dict] = None
-
 @router.get("/profile")
 async def get_profile(authorization: Optional[str] = Header(None), cookie: Optional[str] = Header(None)):
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.replace("Bearer ", "")
-=======
-@router.get("/profile")
-async def profile(authorization: Optional[str] = Header(None), cookie: Optional[str] = Header(None)):
     await ensure_default_admin()
     token = None
     if authorization and authorization.startswith("Bearer "):
-      token = authorization.replace("Bearer ", "")
->>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)
+        token = authorization.replace("Bearer ", "")
     elif cookie and "chargeiq_token=" in cookie:
         for part in cookie.split(";"):
             part = part.strip()
             if part.startswith("chargeiq_token="):
                 token = part.split("chargeiq_token=")[1]
                 break
-<<<<<<< HEAD
 
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        email = payload.get("email")
-        user_id = payload.get("userId")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     mode, collection = await get_users_collection()
-=======
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    mode, collection = await get_users_collection()
     user_id = payload.get("userId")
     email = (payload.get("email") or "").lower().strip()
->>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)
+
     user_doc = None
     if mode == "mongo":
         user_doc = await collection.find_one({"$or": [{"id": user_id}, {"email": email}]})
     else:
         user_doc = collection.get(email)
-<<<<<<< HEAD
-
-    if not user_doc:
-        user_doc = {
-            "id": user_id,
-            "name": payload.get("name", "User"),
-            "email": email,
-            "role": payload.get("role", "user"),
-            "avatar": "",
-            "phone": "",
-            "address": "",
-            "vehicleModel": "",
-            "vehicleNumber": "",
-            "preferredConnector": "CCS2",
-            "preferences": {
-                "notifications": True,
-                "locationSharing": True,
-                "emailUpdates": False,
-                "smsAlerts": True,
-                "darkMode": True
-            }
-        }
-
-    # Format user document without mongo _id
-    user_data = {
-        "id": user_doc.get("id", user_id),
-        "name": user_doc.get("name", ""),
-        "email": user_doc.get("email", email),
-        "role": normalize_role(user_doc.get("role")),
-        "avatar": user_doc.get("avatar", ""),
-        "phone": user_doc.get("phone", ""),
-        "address": user_doc.get("address", ""),
-        "vehicleModel": user_doc.get("vehicleModel", ""),
-        "vehicleNumber": user_doc.get("vehicleNumber", ""),
-        "preferredConnector": user_doc.get("preferredConnector", "CCS2"),
-        "preferences": user_doc.get("preferences", {
-            "notifications": True,
-            "locationSharing": True,
-            "emailUpdates": False,
-            "smsAlerts": True,
-            "darkMode": True
-        })
-    }
-
-    return {"ok": True, "profile": user_data}
-
-@router.put("/profile")
-async def update_profile(data: ProfileUpdateSchema, authorization: Optional[str] = Header(None), cookie: Optional[str] = Header(None)):
-=======
         if not user_doc:
             for item in collection.values():
                 if item.get("id") == user_id:
                     user_doc = item
                     break
+
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
+
     return {"ok": True, "user": _build_profile(user_doc)}
 
 @router.put("/profile")
@@ -423,7 +347,6 @@ async def update_profile(
     cookie: Optional[str] = Header(None),
 ):
     await ensure_default_admin()
->>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
@@ -433,92 +356,45 @@ async def update_profile(
             if part.startswith("chargeiq_token="):
                 token = part.split("chargeiq_token=")[1]
                 break
-<<<<<<< HEAD
 
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        email = payload.get("email")
-        user_id = payload.get("userId")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     mode, collection = await get_users_collection()
-
-    update_fields = {}
-    if data.name is not None: update_fields["name"] = data.name
-    if data.phone is not None: update_fields["phone"] = data.phone
-    if data.address is not None: update_fields["address"] = data.address
-    if data.vehicleModel is not None: update_fields["vehicleModel"] = data.vehicleModel
-    if data.vehicleNumber is not None: update_fields["vehicleNumber"] = data.vehicleNumber
-    if data.preferredConnector is not None: update_fields["preferredConnector"] = data.preferredConnector
-    if data.preferences is not None: update_fields["preferences"] = data.preferences
-
-    if mode == "mongo":
-        await collection.update_one(
-            {"$or": [{"id": user_id}, {"email": email}]},
-            {"$set": update_fields},
-            upsert=True
-        )
-        user_doc = await collection.find_one({"$or": [{"id": user_id}, {"email": email}]})
-    else:
-        existing = collection.get(email, {})
-        existing.update(update_fields)
-        collection[email] = existing
-        user_doc = existing
-
-    user_data = {
-        "id": user_doc.get("id", user_id),
-        "name": user_doc.get("name", ""),
-        "email": user_doc.get("email", email),
-        "role": normalize_role(user_doc.get("role")),
-        "avatar": user_doc.get("avatar", ""),
-        "phone": user_doc.get("phone", ""),
-        "address": user_doc.get("address", ""),
-        "vehicleModel": user_doc.get("vehicleModel", ""),
-        "vehicleNumber": user_doc.get("vehicleNumber", ""),
-        "preferredConnector": user_doc.get("preferredConnector", "CCS2"),
-        "preferences": user_doc.get("preferences", {})
-    }
-
-    return {"ok": True, "profile": user_data}
-=======
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    mode, collection = await get_users_collection()
+    user_id = payload.get("userId")
     email = (payload.get("email") or "").lower().strip()
+
+    PREF_KEYS = {"notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode"}
+
     if mode == "mongo":
-        user_doc = await collection.find_one({"$or": [{"id": payload.get("userId")}, {"email": email}]})
+        user_doc = await collection.find_one({"$or": [{"id": user_id}, {"email": email}]})
         if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         updates = {k: v for k, v in data.model_dump().items() if v is not None}
-        if "preferredConnector" in updates and not updates["preferredConnector"]:
-            updates.pop("preferredConnector")
-        if any(k in updates for k in ("notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode")):
-            pref_updates = {k: updates.pop(k) for k in list(updates.keys()) if k in ("notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode")}
+        pref_updates = {k: updates.pop(k) for k in list(updates.keys()) if k in PREF_KEYS}
+        if pref_updates:
             existing_prefs = user_doc.get("preferences", {})
             existing_prefs.update(pref_updates)
             updates["preferences"] = existing_prefs
         if updates:
             await collection.update_one({"_id": user_doc["_id"]}, {"$set": updates})
+        user_doc = await collection.find_one({"_id": user_doc["_id"]})
     else:
         user_doc = collection.get(email)
         if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         updates = {k: v for k, v in data.model_dump().items() if v is not None}
-        pref_updates = {k: updates.pop(k) for k in list(updates.keys()) if k in ("notifications", "locationSharing", "emailUpdates", "smsAlerts", "darkMode")}
+        pref_updates = {k: updates.pop(k) for k in list(updates.keys()) if k in PREF_KEYS}
         user_doc.update(updates)
         if pref_updates:
             prefs = user_doc.get("preferences", {})
             prefs.update(pref_updates)
             user_doc["preferences"] = prefs
         collection[email] = user_doc
+
     return {"ok": True, "user": _build_profile(user_doc)}
->>>>>>> 7e3627b (feat: implement dynamic route calculation, profile update API, and centralized station fetching utility)

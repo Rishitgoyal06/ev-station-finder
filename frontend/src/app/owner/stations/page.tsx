@@ -25,10 +25,10 @@ export default function OwnerStationsPage() {
   }, [isAuthLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    const load = async () => {
+    const load = async (lat: number, lng: number) => {
       setIsLoading(true);
       try {
-        const data = await fetchStationsCached({ lat: 22.3072, lng: 73.1812, radius: 30000 });
+        const data = await fetchStationsCached({ lat, lng, radius: 30000 });
         setStations(data.results || []);
       } catch {
         setStations([]);
@@ -37,7 +37,16 @@ export default function OwnerStationsPage() {
       }
     };
 
-    if (isAuthenticated) load();
+    if (!isAuthenticated) return;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => load(coords.latitude, coords.longitude),
+        () => load(22.3072, 73.1812)
+      );
+    } else {
+      load(22.3072, 73.1812);
+    }
   }, [isAuthenticated]);
 
   return (

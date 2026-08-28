@@ -15,3 +15,17 @@ export function getForwardHeaders(request: Request) {
 
   return headers;
 }
+
+/**
+ * Attach to any NextResponse when the backend returns 401.
+ * Deletes the stale chargeiq_token cookie so the browser stops
+ * sending it on every subsequent request after token expiry.
+ */
+export function clearAuthCookieOnResponse(response: import("next/server").NextResponse): void {
+  response.cookies.set("chargeiq_token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+    path: "/",
+    sameSite: "lax",
+  });
+}

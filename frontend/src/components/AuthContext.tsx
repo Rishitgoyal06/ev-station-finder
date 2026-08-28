@@ -60,6 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuthStatus = async () => {
     try {
       const response = await fetch("/api/auth/profile");
+
+      // 401 means token is expired or invalid — profile route already deleted the cookie,
+      // but also ensure local state is fully cleared
+      if (response.status === 401) {
+        setIsAuthenticated(false);
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
       const data = await response.json();
       if (data.ok && data.user) {
         setIsAuthenticated(true);

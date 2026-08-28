@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND_BASE_URL, getForwardHeaders } from "@/lib/backend";
+import { BACKEND_BASE_URL, getForwardHeaders, clearAuthCookieOnResponse } from "@/lib/backend";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +9,13 @@ export async function GET(request: NextRequest) {
       cache: "no-store",
     });
     const data = await res.json().catch(() => ({}));
-    return NextResponse.json(data, { status: res.status });
+    const response = NextResponse.json(data, { status: res.status });
+
+    if (res.status === 401) {
+      clearAuthCookieOnResponse(response);
+    }
+
+    return response;
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message || "Unable to load profile" }, { status: 500 });
   }
@@ -24,7 +30,13 @@ export async function PUT(request: NextRequest) {
       body: bodyText,
     });
     const data = await res.json().catch(() => ({}));
-    return NextResponse.json(data, { status: res.status });
+    const response = NextResponse.json(data, { status: res.status });
+
+    if (res.status === 401) {
+      clearAuthCookieOnResponse(response);
+    }
+
+    return response;
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message || "Unable to update profile" }, { status: 500 });
   }

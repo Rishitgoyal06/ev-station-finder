@@ -1,18 +1,38 @@
 services:
+  # ── EV Backend (FastAPI) ──────────────────────────────────────────────────
   - type: web
     name: chargeiq-ev-backend
     runtime: python
     rootDir: ev-backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: GOOGLE_MAPS_API_KEY
-        sync: false          # set manually in Render dashboard
-      - key: MONGODB_URI
-        sync: false          # set manually in Render dashboard
-      - key: JWT_SECRET
-        sync: false          # set manually in Render dashboard
-      - key: ALLOWED_ORIGINS
-        sync: false          # set to your Vercel URL e.g. https://your-app.vercel.app
     healthCheckPath: /health
     plan: free
+    envVars:
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # ── ChatBot (Flask) ───────────────────────────────────────────────────────
+  - type: web
+    name: chargeiq-chatbot
+    runtime: python
+    rootDir: ChatBot
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_API_KEY_2
+        sync: false
+      - key: GROQ_API_KEY_3
+        sync: false
+      - key: HUGGINGFACE_TOKEN
+        sync: false

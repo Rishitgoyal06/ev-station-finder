@@ -3,10 +3,11 @@ import { BACKEND_BASE_URL, getForwardHeaders } from "@/lib/backend";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/slots/${params.id}`, {
+    const { id } = await params;
+    const res = await fetch(`${BACKEND_BASE_URL}/slots/${id}`, {
       method: "PATCH",
       headers: getForwardHeaders(request),
       body: await request.text(),

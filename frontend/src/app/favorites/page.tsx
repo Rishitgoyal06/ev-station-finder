@@ -59,7 +59,7 @@ export default function FavoritesPage() {
 
   const favoriteStations = useMemo(() => favorites, [favorites]);
 
-  const handleRemoveFavorite = (stationId: number) => {
+  const handleRemoveFavorite = (stationId: number | string) => {
     const next = favorites.filter((station) => String(station.id) !== String(stationId));
     setFavorites(next);
     setLoadState(next.length > 0 ? "ready" : "empty");
@@ -131,7 +131,7 @@ export default function FavoritesPage() {
 
           {/* Amenities */}
           <div className="flex items-center gap-2 mb-3 overflow-x-auto">
-            {station.amenities.map((amenity, index) => (
+            {station.amenities?.map((amenity, index) => (
               <span key={index} className="px-2 py-1 bg-[#1f1f1f] text-gray-300 text-xs rounded-full whitespace-nowrap">
                 {amenity}
               </span>
@@ -171,7 +171,7 @@ export default function FavoritesPage() {
                     price: String(station.price || 15),
                     chargeTime: station.chargeTime || "45 mins",
                     connectors: (station.connectors || ["Type 2"]).join(","),
-                    img: station.image || station.img || "",
+                    img: station.image || "",
                     available: String(station.available ?? 1),
                     total: String(station.total ?? 4),
                     peakPower: station.type?.includes("DC") ? "150 kW" : "22 kW",
@@ -269,7 +269,7 @@ export default function FavoritesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">
-                  {favoriteStations.reduce((sum, s) => sum + s.available, 0)}
+                  {favoriteStations.reduce((sum, s) => sum + (s.available ?? 0), 0)}
                 </p>
                 <p className="text-sm text-gray-400">Available Slots</p>
               </div>
@@ -285,7 +285,7 @@ export default function FavoritesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">
-                  {favoriteStations.reduce((sum, s) => sum + s.totalVisits, 0)}
+                  {favoriteStations.reduce((sum, s) => sum + (s.totalVisits ?? 0), 0)}
                 </p>
                 <p className="text-sm text-gray-400">Total Visits</p>
               </div>
@@ -301,7 +301,7 @@ export default function FavoritesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-white">
-                  {(favoriteStations.reduce((sum, s) => sum + s.rating, 0) / favoriteStations.length).toFixed(1)}
+                  {(favoriteStations.reduce((sum, s) => sum + (s.rating ?? 0), 0) / (favoriteStations.length || 1)).toFixed(1)}
                 </p>
                 <p className="text-sm text-gray-400">Avg Rating</p>
               </div>

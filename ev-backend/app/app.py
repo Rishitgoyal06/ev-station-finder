@@ -1,15 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from app.routes import system, stations, directions, auth, bookings, slots, admin
+import os
 
 app = FastAPI(title="Charge IQ - EV Backend")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# CORS — in production, restrict to your Vercel domain
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "*"  # default open for dev; set ALLOWED_ORIGINS env var on Render
+).split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

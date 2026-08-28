@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from app.services.google_places import fetch_photo
 
 router = APIRouter()
@@ -7,12 +7,12 @@ router = APIRouter()
 
 @router.get("/")
 def read_index():
-    return FileResponse("static/index.html")
+    return JSONResponse({"service": "Charge IQ EV Backend", "docs": "/docs", "health": "/health"})
 
 
 @router.get("/health")
 def health_check():
-    return {"status": "EV backend running"}
+    return {"status": "ok", "service": "Charge IQ EV Backend"}
 
 
 @router.get("/photo")

@@ -51,8 +51,15 @@ async def get_all_slots():
     return {"slots": slots}
 
 
+from fastapi import Header
+
 @router.patch("/{slot_id}")
-async def update_slot_status(slot_id: str, data: SlotUpdateSchema):
+async def update_slot_status(
+    slot_id: str,
+    data: SlotUpdateSchema,
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
     new_status = data.status.lower().strip()
     if new_status not in VALID_STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}")
@@ -60,9 +67,9 @@ async def update_slot_status(slot_id: str, data: SlotUpdateSchema):
     mode, collection = await get_slots_collection()
     await _ensure_slots_seeded(mode, collection)
 
-    # Find the seed definition or create a generic one
-    seed = next((s for s in SEED_SLOTS if s["id"] == slot_id), {
+    seed = next((s for s in SEED_SLOTS if s["id"] == slot_id or s.get("slotNumber") == slot_id), {
         "id": slot_id,
+        "slotNumber": slot_id,
         "stationId": "1",
         "name": f"Slot {slot_id.upper()}",
         "type": "CCS2",
@@ -70,19 +77,34 @@ async def update_slot_status(slot_id: str, data: SlotUpdateSchema):
     })
 
     if mode == "mongo":
-        slot = await collection.find_one({"id": slot_id})
+        slot = await collection.find_one({
+            "$or": [
+                {"id": slot_id},
+                {"slotNumber": slot_id},
+                {"name": f"Slot {slot_id.upper()}"},
+                {"name": slot_id}
+            ]
+        })
         if not slot:
             slot = {**seed, "status": new_status}
             await collection.insert_one(slot.copy())
             return {"ok": True, "slot": {k: v for k, v in slot.items() if k != "_id"}}
 
-        await collection.update_one({"id": slot_id}, {"$set": {"status": new_status}})
+        await collection.update_one({"_id": slot["_id"]}, {"$set": {"status": new_status}})
         slot["status"] = new_status
         slot.pop("_id", None)
         return {"ok": True, "slot": slot}
     else:
-        if slot_id not in collection:
+        found_key = slot_id if slot_id in collection else None
+        if not found_key:
+            for k, v in collection.items():
+                if v.get("id") == slot_id or v.get("slotNumber") == slot_id or v.get("name") == f"Slot {slot_id.upper()}":
+                    found_key = k
+                    break
+
+        if not found_key:
             collection[slot_id] = {**seed, "status": new_status}
+            return {"ok": True, "slot": collection[slot_id]}
         else:
-            collection[slot_id]["status"] = new_status
-        return {"ok": True, "slot": collection[slot_id]}
+            collection[found_key]["status"] = new_status
+            return {"ok": True, "slot": collection[found_key]}

@@ -106,27 +106,44 @@ async def _booking_conflicts(
 async def _set_slot_status(slot_id: str, status: str):
     mode, slots = await get_slots_collection()
     if mode == "mongo":
-        slot = await slots.find_one({"id": slot_id})
+        slot = await slots.find_one({
+            "$or": [
+                {"id": slot_id},
+                {"slotNumber": slot_id},
+                {"name": f"Slot {slot_id.upper()}"},
+                {"name": slot_id}
+            ]
+        })
         if slot:
-            await slots.update_one({"id": slot_id}, {"$set": {"status": status}})
+            await slots.update_one({"_id": slot["_id"]}, {"$set": {"status": status}})
         else:
             await slots.insert_one({
                 "id": slot_id,
+                "slotNumber": slot_id,
                 "stationId": "1",
-                "name": f"Slot {slot_id}",
+                "name": f"Slot {slot_id.upper()}",
                 "status": status,
                 "type": "CCS2",
                 "power": "150 kW"
             })
     else:
-        slots[slot_id] = slots.get(slot_id, {
-            "id": slot_id,
-            "stationId": "1",
-            "name": f"Slot {slot_id}",
-            "type": "CCS2",
-            "power": "150 kW"
-        })
-        slots[slot_id]["status"] = status
+        found_key = None
+        for k, v in slots.items():
+            if v.get("id") == slot_id or v.get("slotNumber") == slot_id or v.get("name") == f"Slot {slot_id.upper()}":
+                found_key = k
+                break
+        if found_key:
+            slots[found_key]["status"] = status
+        else:
+            slots[slot_id] = {
+                "id": slot_id,
+                "slotNumber": slot_id,
+                "stationId": "1",
+                "name": f"Slot {slot_id.upper()}",
+                "status": status,
+                "type": "CCS2",
+                "power": "150 kW"
+            }
 
 
 @router.get("")

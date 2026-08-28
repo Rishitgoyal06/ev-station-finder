@@ -60,8 +60,8 @@ def _enrich_place(place: dict, user_lat: float | None, user_lng: float | None) -
 
 @router.get("/ev-stations", response_model=StationsResponse)
 def get_ev_stations(
-    lat: float = Query(...),
-    lng: float = Query(...),
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lng: float = Query(..., ge=-180.0, le=180.0),
     radius: int = Query(30000),
 ):
     if not GOOGLE_API_KEY:

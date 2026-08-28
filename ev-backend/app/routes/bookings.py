@@ -21,7 +21,7 @@ class BookingCreateSchema(BaseModel):
     amount: Optional[float] = 350.0
     slotNumber: Optional[str] = "A1"
     estimatedCharge: Optional[str] = "45 min"
-    vehicleInfo: Optional[str] = "Tata Nexon EV"
+    vehicleInfo: Optional[str] = None
     paymentMethod: Optional[str] = "UPI"
     instructions: Optional[str] = ""
     baseCharge: Optional[float] = None
@@ -218,7 +218,7 @@ async def create_booking(
         "slotNumber": slot_number,
         "estimatedCharge": data.estimatedCharge or "45 min",
         "image": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&q=80",
-        "vehicleInfo": data.vehicleInfo or "Tata Nexon EV",
+        "vehicleInfo": data.vehicleInfo or "",
         "paymentMethod": data.paymentMethod or "UPI",
         "transactionId": f"txn_{uuid.uuid4().hex[:8]}",
         "bookedAt": now_str,

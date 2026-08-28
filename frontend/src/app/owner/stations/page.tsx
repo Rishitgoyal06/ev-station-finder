@@ -55,7 +55,9 @@ export default function OwnerStationsPage() {
               <p className="text-sm text-gray-400">Manage all your charging stations</p>
             </div>
           </div>
-          <button className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-medium rounded-lg transition-colors">
+          <button
+            onClick={() => window.open("mailto:support@chargeiq.in?subject=Register New EV Station&body=I would like to register a new EV charging station.%0A%0AStation Name:%0AAddress:%0AConnector Types:%0ANumber of Slots:%0AOperating Hours:", "_blank")}
+            className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-medium rounded-lg transition-colors">
             + Add New Station
           </button>
         </div>

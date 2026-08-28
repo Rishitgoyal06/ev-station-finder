@@ -49,6 +49,13 @@ export default function OwnerDashboard() {
   const [isLoadingStations, setIsLoadingStations] = useState(true);
   const [stationSearch, setStationSearch] = useState("");
   const [userLocation, setUserLocation] = useState({ lat: 22.3072, lng: 73.1812 });
+
+  // Bookings
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState("all");
+
   const canAccessOwner = user?.role === "owner" || user?.role === "admin";
 
   // Auth guard — only owners (and admins can also view)
@@ -88,6 +95,18 @@ export default function OwnerDashboard() {
       setIsLoadingStations(false);
     }
   };
+
+  // Fetch all bookings when bookings tab is active
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    // Always fetch bookings on mount so Overview stat is populated
+    setIsLoadingBookings(true);
+    fetch("/api/admin/bookings")
+      .then((r) => r.json())
+      .then((d) => setBookings(d.bookings || []))
+      .catch(() => setBookings([]))
+      .finally(() => setIsLoadingBookings(false));
+  }, [isAuthenticated]);
 
   if (isAuthLoading) {
     return (
@@ -186,7 +205,7 @@ export default function OwnerDashboard() {
                 { label: "Stations Nearby", value: isLoadingStations ? null : stations.length, icon: IconChargingPile, color: "text-green-400" },
                 { label: "Currently Open", value: isLoadingStations ? null : openStations.length, icon: IconCircleCheck, color: "text-emerald-400" },
                 { label: "Currently Closed", value: isLoadingStations ? null : closedStations.length, icon: IconLock, color: "text-red-400" },
-                { label: "Active Bookings", value: 0, icon: IconCalendarEvent, color: "text-yellow-400" },
+                { label: "Active Bookings", value: bookings.filter(b => b.status === "confirmed").length, icon: IconCalendarEvent, color: "text-yellow-400" },
               ].map((s, i) => (
                 <div key={i} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
                   {isLoadingStations && s.value === null ? (
@@ -242,7 +261,7 @@ export default function OwnerDashboard() {
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-gray-400">{s.distance_str}</span>
                         <button
-                          onClick={() => router.push(`/directions?dest=${s.latitude},${s.longitude}`)}
+                          onClick={() => router.push(`/directions?lat=${s.latitude}&lng=${s.longitude}&station=${encodeURIComponent(s.name)}&address=${encodeURIComponent(s.address)}`)}
                           className="text-green-400 hover:text-green-300 font-medium"
                         >
                           Directions →
@@ -339,7 +358,7 @@ export default function OwnerDashboard() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">{s.distance_str}</span>
                       <button
-                        onClick={() => router.push(`/directions?dest=${s.latitude},${s.longitude}`)}
+                        onClick={() => router.push(`/directions?lat=${s.latitude}&lng=${s.longitude}&station=${encodeURIComponent(s.name)}&address=${encodeURIComponent(s.address)}`)}
                         className="text-xs text-green-400 hover:text-green-300 font-medium transition-colors"
                       >
                         Get Directions →
@@ -354,13 +373,128 @@ export default function OwnerDashboard() {
 
         {/* ── Bookings Tab ──────────────────────────────────────────── */}
         {activeTab === "bookings" && (
-          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
-            <h3 className="text-lg font-bold mb-2">Station Bookings</h3>
-            <p className="text-sm text-gray-400 mb-5">Bookings made at your registered stations will appear here.</p>
-            <div className="text-center py-16 text-gray-500">
-              <IconCalendar size={44} className="mx-auto mb-3 text-gray-400" stroke={1.6} />
-              <p className="text-white font-semibold mb-1">No bookings yet</p>
-              <p className="text-sm">Once users book charging sessions at your stations, they'll appear here.</p>
+          <div className="space-y-4">
+            {/* Stats strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Total Bookings", value: bookings.length, color: "text-white" },
+                { label: "Active", value: bookings.filter(b => b.status === "confirmed").length, color: "text-green-400" },
+                { label: "Completed", value: bookings.filter(b => b.status === "completed").length, color: "text-blue-400" },
+                { label: "Revenue", value: `₹${bookings.filter(b => b.status !== "cancelled").reduce((s: number, b: any) => s + (b.amount || 0), 0).toLocaleString()}`, color: "text-emerald-400" },
+              ].map((s) => (
+                <div key={s.label} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
+                  <p className="text-xs text-gray-400 mb-1">{s.label}</p>
+                  <p className={`text-2xl font-bold ${s.color}`}>{isLoadingBookings ? "—" : s.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Filters */}
+            <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <h3 className="text-lg font-bold">Station Bookings</h3>
+                <div className="flex items-center gap-2 text-xs text-green-400">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  Live
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div className="flex-1 min-w-[200px] relative">
+                  <input
+                    type="text"
+                    placeholder="Search by station, booking ID or vehicle..."
+                    value={bookingSearch}
+                    onChange={(e) => setBookingSearch(e.target.value)}
+                    className="w-full bg-[#161616] border border-[#2a2a2a] rounded-lg px-4 py-2 pl-9 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 text-sm"
+                  />
+                  <IconSearch size={14} className="absolute left-3 top-2.5 text-gray-500" stroke={2} />
+                </div>
+                <select
+                  value={bookingStatusFilter}
+                  onChange={(e) => setBookingStatusFilter(e.target.value)}
+                  className="bg-[#161616] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="confirmed">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Table */}
+              {isLoadingBookings ? (
+                <div className="animate-pulse space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-12 bg-[#1f1f1f] rounded-lg" />
+                  ))}
+                </div>
+              ) : (() => {
+                const filtered = bookings.filter((b) => {
+                  const matchSearch =
+                    b.stationName?.toLowerCase().includes(bookingSearch.toLowerCase()) ||
+                    b.id?.toLowerCase().includes(bookingSearch.toLowerCase()) ||
+                    (b.vehicleInfo || "").toLowerCase().includes(bookingSearch.toLowerCase());
+                  const matchStatus = bookingStatusFilter === "all" || b.status === bookingStatusFilter;
+                  return matchSearch && matchStatus;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-16 text-gray-500">
+                      <IconCalendar size={44} className="mx-auto mb-3 text-gray-400" stroke={1.6} />
+                      <p className="text-white font-semibold mb-1">
+                        {bookings.length === 0 ? "No bookings yet" : "No bookings match your filter"}
+                      </p>
+                      <p className="text-sm">
+                        {bookings.length === 0
+                          ? "Once users book charging sessions at your stations, they'll appear here."
+                          : "Try adjusting your search or status filter."}
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#1a1a1a] text-left text-gray-400 text-xs">
+                          {["Booking ID", "Station", "Date & Time", "Slot", "Amount", "Status"].map((h) => (
+                            <th key={h} className="py-3 px-3 font-medium">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((b: any) => (
+                          <tr key={b.id} className="border-b border-[#1a1a1a] hover:bg-[#161616] transition-colors">
+                            <td className="py-3 px-3 font-mono text-xs text-gray-300">{b.id}</td>
+                            <td className="py-3 px-3">
+                              <p className="font-medium text-white truncate max-w-[160px]">{b.stationName}</p>
+                              {b.vehicleInfo && <p className="text-xs text-gray-500">{b.vehicleInfo}</p>}
+                            </td>
+                            <td className="py-3 px-3 text-gray-300">
+                              <p>{b.date}</p>
+                              <p className="text-xs text-gray-500">{b.time}</p>
+                            </td>
+                            <td className="py-3 px-3 text-gray-300">{b.slotNumber}</td>
+                            <td className="py-3 px-3 text-green-400 font-bold">₹{b.amount}</td>
+                            <td className="py-3 px-3">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                                b.status === "confirmed" ? "bg-green-500/10 text-green-400 border-green-500/20" :
+                                b.status === "completed" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                                "bg-red-500/10 text-red-400 border-red-500/20"
+                              }`}>
+                                {b.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -370,14 +504,18 @@ export default function OwnerDashboard() {
           <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold">Station Workers</h3>
-              <button className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-medium rounded-lg text-sm transition-colors">
+              <button
+                onClick={() => window.open("mailto:support@chargeiq.in?subject=Add Worker Request&body=Please add the following worker to my station:%0A%0AName:%0AEmail:%0APhone:%0AStation:", "_blank")}
+                className="px-4 py-2 bg-green-500 hover:bg-green-400 text-black font-medium rounded-lg text-sm transition-colors"
+              >
                 + Invite Worker
               </button>
             </div>
             <div className="text-center py-16 text-gray-500">
               <IconUsersGroup size={44} className="mx-auto mb-3 text-gray-400" stroke={1.6} />
               <p className="text-white font-semibold mb-1">No workers added yet</p>
-              <p className="text-sm">Invite workers to manage your charging stations.</p>
+              <p className="text-sm mb-4">Workers who register with the "worker" role will appear here.</p>
+              <p className="text-xs text-gray-600">Ask your workers to sign up at <span className="text-green-400">/signup</span> and select the Worker role.</p>
             </div>
           </div>
         )}

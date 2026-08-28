@@ -603,6 +603,7 @@ function StationDetailContent() {
                       estimatedCharge: stationChargeTime,
                       image: stationImg,
                       paymentMethod: "UPI",
+                      vehicleInfo: user?.vehicleModel || "",
                       instructions: `Park in slot ${slotNumber}. Use the ChargeIQ app to start charging.`,
                     }),
                   });

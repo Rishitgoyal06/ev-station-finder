@@ -133,10 +133,10 @@ export default function BookingDetailsPage() {
     <div class="row"><span class="label">Transaction ID</span><span class="value">${booking.transactionId}</span></div>
   </div>
 
-  <div class="section">
+  ${booking.vehicleInfo ? `<div class="section">
     <div class="section-title">Vehicle</div>
     <div class="row"><span class="label">Vehicle</span><span class="value">${booking.vehicleInfo}</span></div>
-  </div>
+  </div>` : ""}
 
   <div class="footer">
     Generated on ${new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}<br/>
@@ -342,6 +342,7 @@ export default function BookingDetailsPage() {
             </div>
 
             {/* Vehicle Info */}
+            {booking.vehicleInfo && (
             <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Vehicle Information</h3>
               <div className="flex items-center gap-3 p-4 bg-[#161616] border border-[#2a2a2a] rounded-lg">
@@ -356,6 +357,7 @@ export default function BookingDetailsPage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Actions */}
             <div className="space-y-3">

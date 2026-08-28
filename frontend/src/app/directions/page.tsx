@@ -20,8 +20,26 @@ function DirectionsContent() {
   // Get station details from URL params
   const stationName = searchParams?.get("station") || "Charging Station";
   const stationAddress = searchParams?.get("address") || "";
-  const stationLat = parseFloat(searchParams?.get("lat") || "12.9716");
-  const stationLng = parseFloat(searchParams?.get("lng") || "77.5946");
+
+  // Support both ?lat=X&lng=Y and legacy ?dest=X,Y formats
+  const rawLat = searchParams?.get("lat");
+  const rawLng = searchParams?.get("lng");
+  const rawDest = searchParams?.get("dest");
+  let stationLat: number;
+  let stationLng: number;
+
+  if (rawLat && rawLng) {
+    stationLat = parseFloat(rawLat);
+    stationLng = parseFloat(rawLng);
+  } else if (rawDest) {
+    const parts = rawDest.split(",");
+    stationLat = parseFloat(parts[0]);
+    stationLng = parseFloat(parts[1]);
+  } else {
+    // Fallback: Surat, Gujarat (central to most users)
+    stationLat = 21.1702;
+    stationLng = 72.8311;
+  }
   const [routeData, setRouteData] = useState({
     distance: "4.2 km",
     duration: "12 min",
@@ -38,12 +56,12 @@ function DirectionsContent() {
           setUserLocation([position.coords.latitude, position.coords.longitude]);
         },
         () => {
-          // Default to Bangalore if location access denied
-          setUserLocation([12.9716, 77.5946]);
+          // Default to Vadodara if location access denied
+          setUserLocation([22.3072, 73.1812]);
         }
       );
     } else {
-      setUserLocation([12.9716, 77.5946]);
+      setUserLocation([22.3072, 73.1812]);
     }
   }, []);
 

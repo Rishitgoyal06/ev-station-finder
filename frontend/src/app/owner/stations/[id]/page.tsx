@@ -85,7 +85,7 @@ export default function StationManagement() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch("/api/bookings");
+        const res = await fetch("/api/admin/bookings");
         if (res.ok) {
           const data = await res.json();
           setBookings((data.bookings || []) as Booking[]);
@@ -174,7 +174,9 @@ export default function StationManagement() {
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               Live Monitoring
             </div>
-            <button className="px-4 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] rounded-lg font-medium transition-colors">
+            <button
+              onClick={() => router.push("/admin/settings")}
+              className="px-4 py-2 bg-[#1f1f1f] hover:bg-[#2a2a2a] rounded-lg font-medium transition-colors">
               Settings
             </button>
           </div>

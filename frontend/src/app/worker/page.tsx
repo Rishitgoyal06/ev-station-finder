@@ -35,16 +35,7 @@ export default function WorkerDashboard() {
   const [selectedStation, setSelectedStation] = useState("");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [stations, setStations] = useState<NearbyStation[]>([]);
-  const [slotStatuses, setSlotStatuses] = useState<Record<string, string>>({
-    A1: "available",
-    A2: "occupied",
-    A3: "available",
-    A4: "maintenance",
-    B1: "occupied",
-    B2: "available",
-    B3: "reserved",
-    B4: "available",
-  });
+  const [slotStatuses, setSlotStatuses] = useState<Record<string, string>>({});
   const [isStationsLoading, setIsStationsLoading] = useState(true);
 
   useEffect(() => {
@@ -54,7 +45,10 @@ export default function WorkerDashboard() {
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) router.replace("/");
-  }, [isAuthLoading, isAuthenticated, router]);
+    if (!isAuthLoading && isAuthenticated && user && user.role !== "worker" && user.role !== "admin") {
+      router.replace("/dashboard");
+    }
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     const loadBookings = async () => {
@@ -72,7 +66,28 @@ export default function WorkerDashboard() {
       }
     };
 
-    if (isAuthenticated) loadBookings();
+    const loadSlots = async () => {
+      try {
+        const res = await fetch("/api/slots");
+        if (res.ok) {
+          const data = await res.json();
+          const statusMap: Record<string, string> = {};
+          for (const slot of (data.slots || [])) {
+            statusMap[slot.id] = slot.status;
+          }
+          if (Object.keys(statusMap).length > 0) {
+            setSlotStatuses(statusMap);
+          }
+        }
+      } catch {
+        // keep empty — slotData will fall back to "available" for unknown slots
+      }
+    };
+
+    if (isAuthenticated) {
+      loadBookings();
+      loadSlots();
+    }
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -222,7 +237,7 @@ export default function WorkerDashboard() {
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || (user && user.role !== "worker" && user.role !== "admin")) return null;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pt-20 pb-20">

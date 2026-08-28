@@ -79,9 +79,17 @@ export default function DashboardPage() {
     availableSlots: number;
   } | null>(null);
 
+  // Role-based redirect — workers/owners/admins have their own dashboards
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) router.replace("/");
-  }, [isAuthLoading, isAuthenticated, router]);
+    if (!isAuthLoading && !isAuthenticated) {
+      router.replace("/");
+    }
+    if (!isAuthLoading && isAuthenticated && user) {
+      if (user.role === "worker") router.replace("/worker");
+      else if (user.role === "owner") router.replace("/owner");
+      else if (user.role === "admin") router.replace("/admin");
+    }
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     const fetchStations = async (lat: number, lng: number) => {
@@ -142,14 +150,29 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadSummary = async () => {
       try {
-        const res = await fetch("/api/summary");
+        // Fetch the user's own bookings for personal stats
+        const res = await fetch("/api/bookings");
         if (res.ok) {
           const data = await res.json();
+          const bookings: any[] = data.bookings || [];
+          const active = bookings.filter((b) => b.status === "confirmed").length;
+          const spent = bookings
+            .filter((b) => b.status === "completed")
+            .reduce((sum, b) => sum + (b.amount || 0), 0);
+          // Available slots from summary (global — still useful context)
+          let availableSlots = 0;
+          try {
+            const sr = await fetch("/api/summary");
+            if (sr.ok) {
+              const sd = await sr.json();
+              availableSlots = sd.availableSlots || 0;
+            }
+          } catch { /* ignore */ }
           setSummary({
-            totalBookings: data.totalBookings || 0,
-            activeBookings: data.activeBookings || 0,
-            totalRevenue: data.totalRevenue || 0,
-            availableSlots: data.availableSlots || 0,
+            totalBookings: bookings.length,
+            activeBookings: active,
+            totalRevenue: spent,
+            availableSlots,
           });
         }
       } catch {
@@ -167,7 +190,8 @@ export default function DashboardPage() {
       <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
     </div>;
   }
-  if (!isAuthenticated) return null;
+  // Still loading role redirect or non-user role — render nothing (redirect in progress)
+  if (!isAuthenticated || !user || user.role === "worker" || user.role === "owner" || user.role === "admin") return null;
 
   const displayName = typeof user === "string" ? user : user?.name || "Driver";
   const estimatedRange = Math.round(battery * 3);
@@ -361,9 +385,9 @@ export default function DashboardPage() {
           {/* ── Live Summary ── */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: "Bookings", value: summary?.totalBookings ?? "—", color: "text-green-400" },
+              { label: "My Bookings", value: summary?.totalBookings ?? "—", color: "text-green-400" },
               { label: "Active", value: summary?.activeBookings ?? "—", color: "text-blue-400" },
-              { label: "Revenue", value: `₹${summary?.totalRevenue ?? 0}`, color: "text-emerald-400" },
+              { label: "Total Spent", value: `₹${summary?.totalRevenue ?? 0}`, color: "text-emerald-400" },
               { label: "Open Slots", value: summary?.availableSlots ?? "—", color: "text-yellow-400" },
             ].map((item) => (
               <div key={item.label} className="bg-[#111] border border-[#1f1f1f] rounded-xl p-4">

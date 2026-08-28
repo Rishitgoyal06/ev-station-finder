@@ -83,9 +83,23 @@ async def _booking_conflicts(
         return same_station and booking_date == date and booking_time == time and booking_slot == slot_number
 
     if collection_mode == "mongo":
-        cursor = collection.find({})
-        bookings = await cursor.to_list(length=1000)
-        return any(matches(b) for b in bookings)
+        station_filter = []
+        if station_id:
+            station_filter.append({"stationId": station_id})
+        if station_place_id:
+            station_filter.append({"stationPlaceId": station_place_id})
+        station_filter.append({"stationName": station_name})
+
+        query = {
+            "status": {"$ne": "cancelled"},
+            "date": date,
+            "time": time,
+            "slotNumber": slot_number,
+            "$or": station_filter
+        }
+        conflict_doc = await collection.find_one(query)
+        return conflict_doc is not None
+
     return any(matches(b) for b in collection.values())
 
 

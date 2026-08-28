@@ -65,8 +65,10 @@ export default function AdminDashboard() {
   // Live data from the backend API & registered users
   const [evStats, setEvStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<RegisteredUser[]>([]);
+  const [allBookings, setAllBookings] = useState<any[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
 
@@ -123,6 +125,14 @@ export default function AdminDashboard() {
       }
     };
     if (activeTab === "users") fetchUsers();
+    if (activeTab === "bookings") {
+      setIsLoadingBookings(true);
+      fetch("/api/admin/bookings")
+        .then((r) => r.json())
+        .then((d) => setAllBookings(d.bookings || []))
+        .catch(() => setAllBookings([]))
+        .finally(() => setIsLoadingBookings(false));
+    }
   }, [activeTab]);
 
   if (isAuthLoading) {
@@ -447,22 +457,85 @@ export default function AdminDashboard() {
         {/* ── Bookings Tab ──────────────────────────────────────────── */}
         {activeTab === "bookings" && (
           <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
-            <h3 className="text-lg font-bold mb-2">All Bookings</h3>
-            <p className="text-sm text-gray-400 mb-5">Live booking totals from the shared store.</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-[#161616] rounded-xl p-5 text-center">
-                <p className="text-3xl font-black text-green-400">{evStats?.totalBookings ?? 0}</p>
-                <p className="text-sm text-gray-400 mt-1">Total bookings</p>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold">All Bookings</h3>
+              <span className="text-xs text-gray-400">
+                {isLoadingBookings ? "Loading..." : `${allBookings.length} total`}
+              </span>
+            </div>
+
+            {/* Summary strip */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="bg-[#161616] rounded-xl p-4 text-center">
+                <p className="text-2xl font-black text-green-400">
+                  {allBookings.filter((b) => b.status === "confirmed").length}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Active</p>
               </div>
-              <div className="bg-[#161616] rounded-xl p-5 text-center">
-                <p className="text-3xl font-black text-blue-400">{evStats?.activeBookings ?? 0}</p>
-                <p className="text-sm text-gray-400 mt-1">Active bookings</p>
+              <div className="bg-[#161616] rounded-xl p-4 text-center">
+                <p className="text-2xl font-black text-blue-400">
+                  {allBookings.filter((b) => b.status === "completed").length}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Completed</p>
               </div>
-              <div className="bg-[#161616] rounded-xl p-5 text-center">
-                <p className="text-3xl font-black text-emerald-400">₹{evStats?.totalRevenue ?? 0}</p>
-                <p className="text-sm text-gray-400 mt-1">Total revenue</p>
+              <div className="bg-[#161616] rounded-xl p-4 text-center">
+                <p className="text-2xl font-black text-emerald-400">
+                  ₹{allBookings.filter((b) => b.status !== "cancelled").reduce((s: number, b: any) => s + (b.amount || 0), 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">Revenue</p>
               </div>
             </div>
+
+            {/* Booking rows */}
+            {isLoadingBookings ? (
+              <div className="animate-pulse space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-14 bg-[#1f1f1f] rounded-lg" />
+                ))}
+              </div>
+            ) : allBookings.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-10">
+                No bookings yet. They will appear here once customers make reservations.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[#1a1a1a] text-left text-gray-400 text-xs">
+                      {["Booking ID", "Station", "Date & Time", "Slot", "Amount", "Status"].map((h) => (
+                        <th key={h} className="py-3 px-3 font-medium">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allBookings.map((b: any) => (
+                      <tr key={b.id} className="border-b border-[#1a1a1a] hover:bg-[#161616] transition-colors">
+                        <td className="py-3 px-3 font-mono text-xs text-gray-300">{b.id}</td>
+                        <td className="py-3 px-3">
+                          <p className="font-medium text-white truncate max-w-[160px]">{b.stationName}</p>
+                          <p className="text-xs text-gray-500 truncate max-w-[160px]">{b.address}</p>
+                        </td>
+                        <td className="py-3 px-3 text-gray-300">
+                          <p>{b.date}</p>
+                          <p className="text-xs text-gray-500">{b.time}</p>
+                        </td>
+                        <td className="py-3 px-3 text-gray-300">{b.slotNumber}</td>
+                        <td className="py-3 px-3 text-green-400 font-bold">₹{b.amount}</td>
+                        <td className="py-3 px-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                            b.status === "confirmed" ? "bg-green-500/10 text-green-400 border-green-500/20" :
+                            b.status === "completed" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
+                            "bg-red-500/10 text-red-400 border-red-500/20"
+                          }`}>
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

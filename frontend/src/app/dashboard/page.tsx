@@ -3,12 +3,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import dynamic from "next/dynamic";
-import { fetchStationsCached } from "@/lib/stations";
+import { fetchAndNormalizeStations, NormalizedStation } from "@/lib/stations";
 
 const DashboardMap = dynamic(() => import("@/components/DashboardMap"), { ssr: false });
-
-// Fallback mock data
-const fallbackStations: any[] = [];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -70,7 +67,7 @@ export default function DashboardPage() {
   const [location, setLocation] = useState("Detecting...");
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [stationsList, setStationsList] = useState<any[]>(fallbackStations);
+  const [stationsList, setStationsList] = useState<NormalizedStation[]>([]);
   const [isStationsLoading, setIsStationsLoading] = useState(true);
   const [summary, setSummary] = useState<{
     totalBookings: number;
@@ -95,29 +92,8 @@ export default function DashboardPage() {
     const fetchStations = async (lat: number, lng: number) => {
       setIsStationsLoading(true);
       try {
-        const data = await fetchStationsCached({ lat, lng, radius: 30000 });
-        
-        if (data.results && data.results.length > 0) {
-          const mapped = data.results.slice(0, 5).map((s: any, i: number) => {
-            // Generate deterministic mock stats for chargers based on name length
-            const seed = s.name.length + i;
-            const isDC = seed % 2 === 0;
-            const total = (seed % 4) + 2;
-            const available = s.open_now ? (seed % total) : 0;
-            return {
-              id: s.place_id || i.toString(),
-              name: s.name,
-              distance: s.distance_str || "Nearby",
-              type: isDC ? "DC Fast Charger" : "AC Charger",
-              available: available,
-              total: total,
-              price: 12 + (seed % 10)
-            };
-          });
-          setStationsList(mapped);
-        } else {
-          setStationsList([]);
-        }
+        const mapped = await fetchAndNormalizeStations({ lat, lng, radius: 30000 }, 5);
+        setStationsList(mapped);
       } catch (e) {
         console.error("Failed to fetch UI stations", e);
         setStationsList([]);

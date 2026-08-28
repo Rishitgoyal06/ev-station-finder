@@ -3,12 +3,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import dynamic from "next/dynamic";
-import { fetchStationsCached } from "@/lib/stations";
+import { fetchAndNormalizeStations, NormalizedStation } from "@/lib/stations";
 
 const StationsMap = dynamic(() => import("@/components/DashboardMap"), { ssr: false });
-
-// Fallback mock data
-const fallbackStations: any[] = [];
 
 type Filter = "All Chargers" | "DC Fast Charger" | "AC Charger";
 type Sort   = "Nearest" | "Price: Low" | "Available";
@@ -24,7 +21,7 @@ export default function StationsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [location, setLocation] = useState("Vagodhia Taluka");
   const [subLocation, setSubLocation] = useState("Vadodara, Gujarat");
-  const [stationsList, setStationsList] = useState<any[]>(fallbackStations);
+  const [stationsList, setStationsList] = useState<NormalizedStation[]>([]);
   const [isStationsLoading, setIsStationsLoading] = useState(true);
 
   useEffect(() => {
@@ -35,42 +32,8 @@ export default function StationsPage() {
     const fetchStations = async (lat: number, lng: number) => {
       setIsStationsLoading(true);
       try {
-        const data = await fetchStationsCached({ lat, lng, radius: 30000 });
-        
-        if (data.results && data.results.length > 0) {
-          const mapped = data.results.map((s: any, i: number) => {
-            const seed = s.name.length + i;
-            const isDC = seed % 2 === 0;
-            const total = (seed % 4) + 2;
-            const available = s.open_now ? (seed % total) : 0;
-            const imgs = [
-              "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&q=80",
-              "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&q=80",
-              "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
-              "https://images.unsplash.com/photo-1660236822651-4263beb35fa8?w=400&q=80"
-            ];
-            return {
-              id: s.place_id || i.toString(),
-              name: s.name,
-              badge: i === 0 ? "Best Match" : "",
-              address: s.address || "Unknown Location",
-              city: s.city || "",
-              distance: s.distance_str || "Nearby",
-              types: [isDC ? "DC Fast Charger" : "AC Charger"],
-              connectors: [isDC ? "CCS2" : "Type 2"],
-              hours: s.open_now ? "Open Now" : "Closed",
-              available: available,
-              total: total,
-              price: 12 + (seed % 10),
-              chargeTime: isDC ? "35 mins" : "60 mins",
-              verified: seed % 3 !== 0,
-              img: s.photo_urls && s.photo_urls.length > 0 ? `http://localhost:8001${s.photo_urls[0]}` : imgs[seed % imgs.length]
-            };
-          });
-          setStationsList(mapped);
-        } else {
-          setStationsList([]);
-        }
+        const mapped = await fetchAndNormalizeStations({ lat, lng, radius: 30000 });
+        setStationsList(mapped);
       } catch (e) {
         console.error("Failed to fetch UI stations", e);
         setStationsList([]);

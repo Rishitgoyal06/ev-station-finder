@@ -53,6 +53,109 @@ export default function BookingDetailsPage() {
     }
   };
 
+  const handleContactSupport = () => {
+    const subject = encodeURIComponent(`Support Request — Booking ${booking.id}`);
+    const body = encodeURIComponent(
+      `Hi ChargeIQ Support,\n\nI need help with the following booking:\n\n` +
+      `Booking ID:    ${booking.id}\n` +
+      `Station:       ${booking.stationName}\n` +
+      `Date & Time:   ${booking.date} at ${booking.time}\n` +
+      `Amount:        ₹${booking.amount}\n` +
+      `Status:        ${booking.status}\n` +
+      `Transaction:   ${booking.transactionId}\n\n` +
+      `Issue description:\n[Please describe your issue here]\n\n` +
+      `Thank you`
+    );
+    window.location.href = `mailto:support@chargeiq.in?subject=${subject}&body=${body}`;
+  };
+
+  const handleDownloadReceipt = () => {
+    const bookedDate = booking.bookedAt
+      ? new Date(booking.bookedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+      : `${booking.date} ${booking.time}`;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Receipt — ${booking.id}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #111; padding: 40px; max-width: 520px; margin: 0 auto; }
+    .logo { font-size: 22px; font-weight: 900; color: #16a34a; margin-bottom: 4px; }
+    .logo span { color: #111; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 28px; }
+    h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: ${booking.status === 'confirmed' ? '#dcfce7' : booking.status === 'completed' ? '#dbeafe' : '#fee2e2'};
+      color: ${booking.status === 'confirmed' ? '#15803d' : booking.status === 'completed' ? '#1d4ed8' : '#b91c1c'};
+      margin-bottom: 24px; }
+    .section { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin-bottom: 12px; }
+    .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+    .row:last-child { margin-bottom: 0; }
+    .row .label { color: #6b7280; }
+    .row .value { font-weight: 500; color: #111; }
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 10px 0; }
+    .total-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; margin-top: 4px; }
+    .total-row .amount { color: #16a34a; }
+    .footer { text-align: center; font-size: 11px; color: #9ca3af; margin-top: 28px; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="logo">Charge<span>IQ</span></div>
+  <div class="subtitle">EV Charging Network — Official Receipt</div>
+
+  <h2>${booking.stationName}</h2>
+  <div class="badge">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</div>
+
+  <div class="section">
+    <div class="section-title">Booking Details</div>
+    <div class="row"><span class="label">Booking ID</span><span class="value">${booking.id}</span></div>
+    <div class="row"><span class="label">Date & Time</span><span class="value">${booking.date} at ${booking.time}</span></div>
+    <div class="row"><span class="label">Booked At</span><span class="value">${bookedDate}</span></div>
+    <div class="row"><span class="label">Slot</span><span class="value">${booking.slotNumber || "—"}</span></div>
+    <div class="row"><span class="label">Connector</span><span class="value">${booking.connector}</span></div>
+    <div class="row"><span class="label">Duration</span><span class="value">${booking.estimatedCharge}</span></div>
+    <div class="row"><span class="label">Station Address</span><span class="value">${booking.address}</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Payment Summary</div>
+    <div class="row"><span class="label">Charging Fee</span><span class="value">₹${paymentSummary.chargingFee}</span></div>
+    <div class="row"><span class="label">Service Fee</span><span class="value">₹${paymentSummary.serviceFee}</span></div>
+    <div class="row"><span class="label">Taxes</span><span class="value">₹${paymentSummary.taxes}</span></div>
+    <hr class="divider"/>
+    <div class="total-row"><span>Total Amount</span><span class="amount">₹${booking.amount}</span></div>
+    <hr class="divider"/>
+    <div class="row" style="margin-top:8px"><span class="label">Payment Method</span><span class="value">${booking.paymentMethod}</span></div>
+    <div class="row"><span class="label">Transaction ID</span><span class="value">${booking.transactionId}</span></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Vehicle</div>
+    <div class="row"><span class="label">Vehicle</span><span class="value">${booking.vehicleInfo}</span></div>
+  </div>
+
+  <div class="footer">
+    Generated on ${new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}<br/>
+    ChargeIQ EV Network · support@chargeiq.in · chargeiq.in
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ChargeIQ-Receipt-${booking.id}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const paymentSummary = {
     chargingFee: booking?.baseCharge ?? Math.max(0, (booking?.amount || 0) - 25),
     serviceFee: booking?.serviceFee ?? 15,
@@ -268,14 +371,18 @@ export default function BookingDetailsPage() {
                 </button>
               )}
 
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-xl font-semibold transition-colors">
+              <button
+                onClick={handleContactSupport}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-xl font-semibold transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
                 Contact Support
               </button>
 
-              <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-xl font-semibold transition-colors">
+              <button
+                onClick={handleDownloadReceipt}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-xl font-semibold transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>

@@ -5,9 +5,22 @@ from app.services.google_places import fetch_photo
 router = APIRouter()
 
 
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+from app.services.google_places import fetch_photo
+
+router = APIRouter()
+
+
 @router.get("/")
-def read_index():
-    return JSONResponse({"service": "Charge IQ EV Backend", "docs": "/docs", "health": "/health"})
+def read_index(request: Request, embed: str = None):
+    """Serve map interface if embed parameter is present, otherwise return API info"""
+    if embed is not None:
+        # Serve the map interface for embed mode
+        return FileResponse('static/index.html')
+    else:
+        # Return API information
+        return JSONResponse({"service": "Charge IQ EV Backend", "docs": "/docs", "health": "/health"})
 
 
 @router.get("/health")

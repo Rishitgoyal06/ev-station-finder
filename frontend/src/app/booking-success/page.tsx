@@ -35,9 +35,21 @@ function BookingSuccessContent() {
 
   useEffect(() => {
     if (countdown === 0) {
-      router.push("/bookings");
+      // Redirect to navigation/directions page instead of bookings
+      if (bookingData) {
+        const params = new URLSearchParams({
+          station: bookingData.stationName || "Charging Station",
+          address: bookingData.address || "",
+          lat: bookingData.latitude?.toString() || "22.3072",
+          lng: bookingData.longitude?.toString() || "73.1812"
+        });
+        router.push(`/directions?${params.toString()}`);
+      } else {
+        // Fallback if no booking data
+        router.push("/directions");
+      }
     }
-  }, [countdown, router]);
+  }, [countdown, router, bookingData]);
 
   const fallbackBooking = {
     id: "BK001",
@@ -49,7 +61,8 @@ function BookingSuccessContent() {
     amount: 245,
     slotNumber: "A3",
     estimatedCharge: "45 minutes",
-    image: "/WhatsApp Image 2026-03-30 at 11.48.19 PM.jpeg"
+    latitude: 12.9716,
+    longitude: 77.5946
   };
   const activeBooking = bookingData ?? fallbackBooking;
 
@@ -70,9 +83,6 @@ function BookingSuccessContent() {
         {/* Booking Details Card */}
         <div className="bg-[#111] border border-[#1a1a1a] rounded-2xl p-6 mb-8">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-[#1f1f1f] rounded-lg overflow-hidden">
-              <img src={activeBooking.image} alt={activeBooking.stationName} className="w-full h-full object-cover"/>
-            </div>
             <div>
               <h3 className="text-lg font-bold text-white">{activeBooking.stationName}</h3>
               <p className="text-sm text-gray-400">{activeBooking.address}</p>
@@ -109,11 +119,12 @@ function BookingSuccessContent() {
         <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 mb-8">
           <div className="flex items-start gap-3">
             <svg className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
             <div>
-              <h4 className="text-blue-400 font-semibold mb-2">Next Steps</h4>
+              <h4 className="text-blue-400 font-semibold mb-2">Ready to Go?</h4>
               <ul className="text-sm text-gray-300 space-y-1">
+                <li>• Start navigation to get turn-by-turn directions</li>
                 <li>• Arrive at the station 5 minutes before your slot time</li>
                 <li>• Park your vehicle in slot {activeBooking.slotNumber}</li>
                 <li>• Use the ChargeIQ app to start charging</li>
@@ -126,8 +137,30 @@ function BookingSuccessContent() {
         {/* Action Buttons */}
         <div className="space-y-3">
           <button 
-            onClick={() => router.push(`/bookings/${activeBooking.id}`)}
+            onClick={() => {
+              if (bookingData) {
+                const params = new URLSearchParams({
+                  station: bookingData.stationName || "Charging Station",
+                  address: bookingData.address || "",
+                  lat: bookingData.latitude?.toString() || "22.3072",
+                  lng: bookingData.longitude?.toString() || "73.1812"
+                });
+                router.push(`/directions?${params.toString()}`);
+              } else {
+                router.push("/directions");
+              }
+            }}
             className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 text-black px-6 py-4 rounded-xl font-semibold transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            Start Navigation
+          </button>
+
+          <button 
+            onClick={() => router.push(`/bookings/${activeBooking.id}`)}
+            className="w-full flex items-center justify-center gap-2 bg-[#111] hover:bg-[#1f1f1f] border border-[#2a2a2a] px-6 py-4 rounded-xl font-semibold transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
@@ -171,7 +204,7 @@ function BookingSuccessContent() {
         {/* Auto Redirect Info */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
-            Redirecting to My Bookings in {countdown} seconds
+            Redirecting to Navigation in {countdown} seconds
           </p>
         </div>
 

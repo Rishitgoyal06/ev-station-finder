@@ -46,15 +46,26 @@ const STATION_IMGS = [
  * Transforms a raw Google Places result from the backend into a normalized
  * station object used consistently across dashboard, stations list, worker, and owner pages.
  *
- * Uses a deterministic seed (name.length + index) so the same station always
- * gets the same availability/price values within a session — consistent UX
- * without real-time slot data from the backend.
+ * Now uses real-time availability data from the backend when available,
+ * falls back to deterministic calculation for backwards compatibility.
  */
 export function normalizeStation(raw: any, index: number): NormalizedStation {
   const seed = raw.name.length + index;
   const isDC = seed % 2 === 0;
-  const total = (seed % 4) + 2;
-  const available = raw.open_now ? seed % total : 0;
+  
+  // Use real-time availability if provided by backend, otherwise fallback to static calculation
+  let total: number;
+  let available: number;
+  
+  if (raw.available_slots !== undefined && raw.total_slots !== undefined) {
+    // Use real-time data from backend
+    available = raw.available_slots;
+    total = raw.total_slots;
+  } else {
+    // Fallback to static calculation
+    total = (seed % 4) + 2;
+    available = raw.open_now ? seed % total : 0;
+  }
 
   const type = isDC ? "DC Fast Charger" as const : "AC Charger" as const;
   const connector = isDC ? "CCS2" : "Type 2";
@@ -63,7 +74,7 @@ export function normalizeStation(raw: any, index: number): NormalizedStation {
 
   const backendImg =
     raw.photo_urls && raw.photo_urls.length > 0
-      ? `http://localhost:8001${raw.photo_urls[0]}`
+      ? `http://localhost:8000${raw.photo_urls[0]}`
       : null;
 
   return {
@@ -199,4 +210,29 @@ export function clearStationsCache() {
       // ignore
     }
   }
+}
+
+/**
+ * Refresh station data after booking/cancelling to get updated availability.
+ * This clears cache and refetches data for the given location.
+ */
+export async function refreshStationsAfterBooking(
+  query: StationQuery,
+  limit?: number
+): Promise<NormalizedStation[]> {
+  const key = cacheKey(query);
+  
+  // Clear cache for this location
+  MEMORY_CACHE.delete(key);
+  INFLIGHT.delete(key);
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem(`stations:${key}`);
+    } catch {
+      // ignore
+    }
+  }
+  
+  // Fetch fresh data
+  return fetchAndNormalizeStations(query, limit);
 }

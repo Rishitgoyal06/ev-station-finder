@@ -12,6 +12,7 @@ def fetch_nearby(lat: float, lng: float, radius: int) -> dict:
     response = requests.get(NEARBY_SEARCH_URL, params=params, timeout=10)
     return response.json()
 
+
 def fetch_text_search(query: str) -> dict:
     params = {"query": query, "key": GOOGLE_API_KEY}
     response = requests.get(TEXT_SEARCH_URL, params=params, timeout=10)

@@ -13,7 +13,7 @@ import { useState } from "react";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/components/AuthContext";
 import { useRouter } from "next/navigation";
-import { IconBolt, IconChargingPile, IconSparkles } from "@tabler/icons-react";
+import { IconBolt, IconChargingPile } from "@tabler/icons-react";
  
 export function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -61,12 +61,8 @@ export function NavBar() {
                 <IconChargingPile size={20} className="relative text-green-400" stroke={1.8} />
               </div>
               <div className="hidden sm:block leading-tight">
-                <div className="flex items-center gap-1.5 text-white font-semibold tracking-wide">
-                  EV Station
-                  <IconSparkles size={14} className="text-green-400" stroke={1.8} />
-                </div>
-                <div className="text-[11px] uppercase tracking-[0.3em] text-gray-400">
-                  Finder
+                <div className="text-white font-bold tracking-wide text-base">
+                  <span className="text-green-400">Charge</span>IQ
                 </div>
               </div>
             </button>
@@ -132,7 +128,9 @@ export function NavBar() {
                 <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1f1f1f] to-[#050505] border border-white/10">
                   <IconChargingPile size={18} className="text-green-400" stroke={1.8} />
                 </div>
-                <div className="text-white font-semibold">EV Station</div>
+                <div className="text-white font-bold">
+                  <span className="text-green-400">Charge</span>IQ
+                </div>
               </button>
               <MobileNavToggle
                 isOpen={isMobileMenuOpen}

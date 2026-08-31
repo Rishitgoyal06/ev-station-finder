@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.log("Auth status check failed:", error);
+      console.error("Auth status check failed:", error);
       setIsAuthenticated(false);
       setUser(null);
     } finally {

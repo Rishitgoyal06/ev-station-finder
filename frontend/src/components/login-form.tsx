@@ -92,30 +92,7 @@ export function LoginForm({
   });
 
   const handleSimulatedGoogleLogin = async () => {
-    setLoading(true);
-    setError("");
-    const dummyUser = {
-      email: "google.user@example.com",
-      name: "Google User",
-      sub: "google-oauth-1001",
-      picture: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-    };
-    const res = await googleLogin({ userInfo: dummyUser });
-    setLoading(false);
-    if (res.ok) {
-      onSuccess?.();
-      router.push(
-        res.user?.role === "owner"
-          ? "/owner"
-          : res.user?.role === "admin"
-            ? "/admin"
-            : res.user?.role === "worker"
-              ? "/worker"
-              : "/dashboard"
-      );
-    } else {
-      setError(res.error || "Google login failed");
-    }
+    setError("Google Sign-In is not configured. Please use email and password to sign in.");
   };
 
   return (

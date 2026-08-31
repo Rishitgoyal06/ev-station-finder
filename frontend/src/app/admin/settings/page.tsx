@@ -5,42 +5,40 @@ import { useRouter } from "next/navigation";
 export default function AdminSettings() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState("general");
-  const [settings, setSettings] = useState({
-    // General Settings
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const DEFAULT_SETTINGS = {
     appName: "ChargeIQ",
     companyName: "ChargeIQ Technologies",
     supportEmail: "support@chargeiq.com",
     maxBookingDuration: 120,
     defaultCancellationTime: 30,
-    
-    // Pricing Settings
     platformCommission: 10,
     processingFee: 2.5,
     cancellationFee: 25,
-    
-    // Notification Settings
     emailNotifications: true,
     smsNotifications: true,
     pushNotifications: true,
     maintenanceAlerts: true,
-    
-    // Security Settings
     sessionTimeout: 60,
     maxLoginAttempts: 3,
     passwordMinLength: 8,
     requireTwoFA: false,
-    
-    // API Settings
     rateLimitPerMinute: 100,
     maxFileUploadSize: 10,
     apiTimeout: 30,
-    
-    // Feature Flags
     enableRealtimeUpdates: true,
     enableAdvancedFilters: true,
     enablePriceAlerts: true,
-    enableWaitlist: false
-  });
+    enableWaitlist: false,
+  };
+
+  const [settings, setSettings] = useState({ ...DEFAULT_SETTINGS });
 
   const sections = [
     { id: "general", name: "General", icon: "⚙️" },
@@ -54,21 +52,18 @@ export default function AdminSettings() {
   ];
 
   const updateSetting = (key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
   const saveSettings = () => {
-    // Here you would make an API call to save settings
-    console.log("Saving settings:", settings);
-    // Show success message
+    // Settings are UI-only (no dedicated settings API endpoint exists).
+    // Changes persist for the session. Show confirmation to the admin.
+    showToast("success", "✅ Settings saved for this session.");
   };
 
   const resetToDefaults = () => {
-    // Reset to default values
-    console.log("Resetting to defaults");
+    setSettings({ ...DEFAULT_SETTINGS });
+    showToast("success", "Settings reset to defaults.");
   };
 
   return (
@@ -380,6 +375,19 @@ export default function AdminSettings() {
           </div>
         </div>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-medium ${
+          toast.type === "success"
+            ? "bg-[#111] border-green-500/40 text-green-300"
+            : "bg-[#111] border-red-500/40 text-red-300"
+        }`}>
+          <span className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-green-400 animate-pulse" : "bg-red-400"}`} />
+          {toast.message}
+          <button onClick={() => setToast(null)} className="ml-2 text-gray-500 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+      )}
     </div>
   );
 }

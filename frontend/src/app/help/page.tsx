@@ -71,28 +71,28 @@ export default function HelpPage() {
       title: "Contact Support",
       description: "Get help from our support team",
       icon: "📞",
-      action: () => console.log("Opening support chat"),
+      action: () => window.open("mailto:support@chargeiq.in?subject=Support Request", "_blank"),
       color: "bg-green-500/20 text-green-400 border-green-500/30"
     },
     {
       title: "Report an Issue",
       description: "Report problems with stations or app",
       icon: "⚠️",
-      action: () => console.log("Opening issue report"),
+      action: () => window.open("mailto:support@chargeiq.in?subject=Issue Report&body=Describe the issue:%0A%0AStation (if applicable):%0ASteps to reproduce:", "_blank"),
       color: "bg-red-500/20 text-red-400 border-red-500/30"
     },
     {
       title: "Live Chat",
       description: "Chat with our AI assistant",
       icon: "💬",
-      action: () => console.log("Opening live chat"),
+      action: () => router.push("/?chat=open"),
       color: "bg-blue-500/20 text-blue-400 border-blue-500/30"
     },
     {
       title: "Video Tutorials",
       description: "Watch step-by-step guides",
       icon: "🎥",
-      action: () => console.log("Opening tutorials"),
+      action: () => window.open("https://www.youtube.com/@chargeiq", "_blank"),
       color: "bg-purple-500/20 text-purple-400 border-purple-500/30"
     }
   ];

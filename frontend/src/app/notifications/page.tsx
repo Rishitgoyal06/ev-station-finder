@@ -3,22 +3,23 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 
+type Notification = {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  icon: string;
+  color: string;
+  bgColor: string;
+};
+
 export default function NotificationsPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated, router]);
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  const notifications = [
+  const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: 1,
       type: "booking_confirmed",
@@ -32,10 +33,10 @@ export default function NotificationsPage() {
     },
     {
       id: 2,
-      type: "slot_available", 
+      type: "slot_available",
       title: "Slot Available",
       message: "A slot just became available at VoltSpark Center near you.",
-      time: "15 minutes ago", 
+      time: "15 minutes ago",
       read: false,
       icon: "⚡",
       color: "text-blue-400",
@@ -49,7 +50,7 @@ export default function NotificationsPage() {
       time: "32 minutes ago",
       read: true,
       icon: "🕒",
-      color: "text-yellow-400", 
+      color: "text-yellow-400",
       bgColor: "bg-yellow-500/20"
     },
     {
@@ -66,7 +67,7 @@ export default function NotificationsPage() {
     {
       id: 5,
       type: "session_complete",
-      title: "Charging Session Complete", 
+      title: "Charging Session Complete",
       message: "Your vehicle has been charged successfully. 42.5 kWh delivered.",
       time: "1 day ago",
       read: true,
@@ -80,7 +81,7 @@ export default function NotificationsPage() {
       title: "Price Drop Alert",
       message: "Charging rates at ChargeIQ Station dropped to ₹15/kWh. Book now!",
       time: "1 day ago",
-      read: true, 
+      read: true,
       icon: "📉",
       color: "text-green-400",
       bgColor: "bg-green-500/20"
@@ -88,7 +89,7 @@ export default function NotificationsPage() {
     {
       id: 7,
       type: "maintenance",
-      title: "Station Maintenance", 
+      title: "Station Maintenance",
       message: "VoltSpark Center will be under maintenance tomorrow 2-4 PM.",
       time: "2 days ago",
       read: true,
@@ -96,7 +97,13 @@ export default function NotificationsPage() {
       color: "text-orange-400",
       bgColor: "bg-orange-500/20"
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    if (!isAuthenticated) router.replace("/");
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) return null;
 
   const filteredNotifications = notifications.filter(notification => {
     if (activeFilter === "all") return true;
@@ -109,18 +116,17 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = (notificationId: number) => {
-    // Here you would make an API call to mark as read
-    console.log(`Marking notification ${notificationId} as read`);
+    setNotifications(prev =>
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
   };
 
   const markAllAsRead = () => {
-    // Here you would make an API call to mark all as read
-    console.log("Marking all notifications as read");
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const deleteNotification = (notificationId: number) => {
-    // Here you would make an API call to delete
-    console.log(`Deleting notification ${notificationId}`);
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
   };
 
   return (

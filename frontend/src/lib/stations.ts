@@ -1,3 +1,5 @@
+import { CLIENT_BACKEND_URL } from "@/lib/backend";
+
 type StationQuery = {
   lat: number;
   lng: number;
@@ -72,13 +74,12 @@ export function normalizeStation(raw: any, index: number): NormalizedStation {
   const price = 12 + (seed % 10);
   const chargeTime = isDC ? "35 mins" : "60 mins";
 
-  // Photo URLs from the backend are proxied via /api/ev-stations photo endpoint
-  // Using BACKEND_BASE_URL from backend.ts for server-side normalization,
-  // but in client context we fall back to the static images
-  const backendImg =
-    raw.photo_urls && raw.photo_urls.length > 0
-      ? null  // photo proxy not reliable client-side; use static fallback
-      : null;
+  // Use the photo_reference from Google Places nearby search to build
+  // a proxied image URL through the backend — avoids exposing the API key client-side.
+  const photoRef = raw.photo_reference as string | undefined;
+  const backendImg = photoRef
+    ? `${CLIENT_BACKEND_URL}/photo?ref=${encodeURIComponent(photoRef)}`
+    : null;
 
   return {
     id: raw.place_id || String(index),

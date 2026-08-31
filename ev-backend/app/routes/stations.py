@@ -86,6 +86,7 @@ def _enrich_place(place: dict, user_lat: float | None, user_lng: float | None) -
         "distance_str": format_distance(round(distance)) if distance is not None else None,
         "estimated_time": estimate_travel_time(distance) if distance is not None else None,
         "photo_urls": [],
+        "photo_reference": (place.get("photos") or [{}])[0].get("photo_reference"),
         "phone_no": None,
     }
 

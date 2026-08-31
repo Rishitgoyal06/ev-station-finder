@@ -14,6 +14,9 @@ class EVStationResult(BaseModel):
     distance_str: Optional[str]
     estimated_time: Optional[str]
     photo_urls: list[str]
+    photo_reference: Optional[str] = None
+    available_slots: Optional[int] = None
+    total_slots: Optional[int] = None
     phone_no: Optional[str]
 
 

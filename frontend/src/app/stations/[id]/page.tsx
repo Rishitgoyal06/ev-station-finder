@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
-import { BACKEND_BASE_URL } from "@/lib/backend";
+import { BACKEND_BASE_URL, CLIENT_BACKEND_URL } from "@/lib/backend";
 
 type StationDetail = {
   place_id?: string;
@@ -31,9 +31,7 @@ function StationDetailContent() {
   const fallbackCity = searchParams?.get("city") || "";
   const fallbackPrice = parseFloat(searchParams?.get("price") || "15");
   const fallbackChargeTime = searchParams?.get("chargeTime") || "45 mins";
-  const fallbackImg =
-    searchParams?.get("img") ||
-    "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=900&q=85";
+  const fallbackImg = searchParams?.get("img") || "";
   const fallbackAvail = parseInt(searchParams?.get("available") || "1");
   const fallbackTotal = parseInt(searchParams?.get("total") || "4");
   const fallbackPeakPower = searchParams?.get("peakPower") || "50 kW";
@@ -74,7 +72,9 @@ function StationDetailContent() {
   const stationPrice = fallbackPrice;
   const stationChargeTime = fallbackChargeTime;
   const stationPhotos = stationData?.photo_urls || [];
-  const stationImg = stationPhotos[0] ? `${BACKEND_BASE_URL}${stationPhotos[0]}` : fallbackImg;
+  const stationImg = stationPhotos[0]
+    ? `${CLIENT_BACKEND_URL}${stationPhotos[0]}`
+    : fallbackImg || "";
   const stationAvail = stationData?.open_now === false ? 0 : fallbackAvail;
   const stationTotal = fallbackTotal;
   const stationPeakPower = fallbackPeakPower;
@@ -269,12 +269,36 @@ function StationDetailContent() {
 
           {/* Hero image */}
           <div className="relative rounded-2xl overflow-hidden aspect-[16/9] bg-[#111]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={stationImg}
-              alt={stationName}
-              className="w-full h-full object-cover"
-            />
+            {stationImg ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={stationImg}
+                  alt={stationName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const el = e.target as HTMLImageElement;
+                    el.style.display = "none";
+                    const fallback = document.getElementById("img-fallback-detail");
+                    if (fallback) { fallback.style.display = "flex"; }
+                  }}
+                />
+                {/* Shown if image fails to load */}
+                <div className="hidden w-full h-full absolute inset-0 bg-[#111] flex-col items-center justify-center gap-3" id="img-fallback-detail">
+                  <svg className="w-14 h-14 text-green-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                  </svg>
+                  <span className="text-sm text-[#555]">No photo available</span>
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                <svg className="w-14 h-14 text-green-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                <span className="text-sm text-[#555]">No photo available</span>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm border border-green-500/40 text-green-400 text-[11px] font-semibold px-3 py-1.5 rounded-full">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />

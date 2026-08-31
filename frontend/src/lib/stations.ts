@@ -37,12 +37,8 @@ export type NormalizedStation = {
   place_id: string;
 };
 
-const STATION_IMGS = [
-  "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&q=80",
-  "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400&q=80",
-  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
-  "https://images.unsplash.com/photo-1660236822651-4263beb35fa8?w=400&q=80",
-];
+// Cache version — bump this when the response shape changes to bust stale sessionStorage
+const CACHE_VERSION = "v2";
 
 /**
  * Transforms a raw Google Places result from the backend into a normalized
@@ -77,9 +73,9 @@ export function normalizeStation(raw: any, index: number): NormalizedStation {
   // Use the photo_reference from Google Places nearby search to build
   // a proxied image URL through the backend — avoids exposing the API key client-side.
   const photoRef = raw.photo_reference as string | undefined;
-  const backendImg = photoRef
+  const img = photoRef
     ? `${CLIENT_BACKEND_URL}/photo?ref=${encodeURIComponent(photoRef)}`
-    : null;
+    : null; // No photo available for this station
 
   return {
     id: raw.place_id || String(index),
@@ -99,7 +95,7 @@ export function normalizeStation(raw: any, index: number): NormalizedStation {
     chargeTime,
     hours: raw.open_now ? "Open Now" : "Closed",
     open_now: !!raw.open_now,
-    img: backendImg ?? STATION_IMGS[seed % STATION_IMGS.length],
+    img: img ?? "",
     badge: index === 0 ? "Best Match" : "",
     verified: seed % 3 !== 0,
     peakPower: isDC ? "150 kW" : "22 kW",
@@ -135,7 +131,7 @@ function bucketCoord(n: number) {
 }
 
 function cacheKey({ lat, lng, radius = 30000 }: StationQuery) {
-  return `${bucketCoord(lat)}:${bucketCoord(lng)}:${radius}`;
+  return `${CACHE_VERSION}:${bucketCoord(lat)}:${bucketCoord(lng)}:${radius}`;
 }
 
 function getFromStorage(key: string): CachedResponse | null {
@@ -152,6 +148,10 @@ function getFromStorage(key: string): CachedResponse | null {
 function saveToStorage(key: string, payload: CachedResponse) {
   if (typeof window === "undefined") return;
   try {
+    // Purge any old-version cache entries
+    Object.keys(sessionStorage)
+      .filter((k) => k.startsWith("stations:") && !k.startsWith(`stations:${CACHE_VERSION}:`))
+      .forEach((k) => sessionStorage.removeItem(k));
     sessionStorage.setItem(`stations:${key}`, JSON.stringify(payload));
   } catch {
     // ignore quota errors — memory cache still works

@@ -286,8 +286,30 @@ export default function StationsPage() {
                     <div className="flex flex-col sm:flex-row gap-0">
                       {/* Image */}
                       <div className="relative w-full sm:w-[200px] h-[140px] sm:h-auto flex-shrink-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={s.img} alt={s.name} className="w-full h-full object-cover" />
+                        {s.img ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={s.img}
+                            alt={s.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const el = e.target as HTMLImageElement;
+                              el.style.display = "none";
+                              const ph = el.parentElement?.querySelector(".img-placeholder") as HTMLElement | null;
+                              if (ph) ph.style.display = "flex";
+                            }}
+                          />
+                        ) : null}
+                        {/* Placeholder shown when no photo or photo fails to load */}
+                        <div
+                          className="img-placeholder w-full h-full bg-[#1a1a1a] flex-col items-center justify-center gap-2"
+                          style={{ display: s.img ? "none" : "flex" }}
+                        >
+                          <svg className="w-10 h-10 text-green-500/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                          </svg>
+                          <span className="text-[10px] text-[#555]">No photo</span>
+                        </div>
                         {s.badge && (
                           <div className="absolute top-2 left-2 bg-green-500/90 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">{s.badge}</div>
                         )}

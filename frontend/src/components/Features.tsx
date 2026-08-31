@@ -46,7 +46,7 @@ export default function Features() {
     {
       title: "Interactive Map",
       description:
-        "Explore 5000+ charging stations across India with real-time availability",
+        "Explore 10,000+ charging stations across India with real-time availability",
       icon: <Map size={52} color="#1cb048" />,
       details: [
         "Real-time station status",
@@ -57,7 +57,7 @@ export default function Features() {
     },
     {
       title: "AI-Powered Assistant",
-      description: "Multilingual chatbot supporting 40+ Indian languages",
+      description: "Multilingual chatbot supporting 7+ Indian languages",
       icon: <Bot size={52} color="#1cb048" />,
       details: [
         "Natural language queries",
@@ -312,9 +312,9 @@ export default function Features() {
               </h3>
               <div className="space-y-4">
                 {[
-                  { label: "Charging Stations", value: "5000+" },
-                  { label: "Supported Languages", value: "40+" },
-                  { label: "Cities Covered", value: "100+" },
+                  { label: "Charging Stations", value: "10,000+" },
+                  { label: "Supported Languages", value: "10+" },
+                  { label: "Cities Covered", value: "7000+" },
                   { label: "Real-time Updates", value: "24/7" },
                   { label: "API Response Time", value: "<200ms" },
                   { label: "Map Accuracy", value: "99.9%" },
@@ -344,13 +344,10 @@ export default function Features() {
                 {[
                   { category: "Frontend", tech: "Next.js, React, TypeScript" },
                   { category: "Backend", tech: "FastAPI, Flask, Python" },
-                  { category: "Database", tech: "Redis Cache" },
+                  { category: "Database", tech: "MongoDB, In-memory Cache" },
                   { category: "APIs", tech: "Google Maps, Places API" },
-                  {
-                    category: "AI/ML",
-                    tech: "Groq, Natural Language Processing",
-                  },
-                  { category: "Deployment", tech: "Vercel, Railway, Docker" },
+                  { category: "AI/ML", tech: "Groq, Natural Language Processing" },
+                  { category: "Deployment", tech: "Vercel, Render" },
                 ].map((tech, index) => (
                   <div key={index} className="py-2">
                     <div className="mb-1 font-semibold text-emerald-300">

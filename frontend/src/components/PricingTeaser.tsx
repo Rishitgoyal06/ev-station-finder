@@ -273,7 +273,7 @@ export function PricingTeaser() {
               </div>
               <div className="text-center">
                 <h4 className="text-lg font-semibold text-white mb-2">All India Coverage</h4>
-                <p className="text-gray-400 text-sm">Access to 5000+ charging stations nationwide</p>
+                <p className="text-gray-400 text-sm">Access to 10,000+ charging stations nationwide</p>
               </div>
             </div>
           </div>

@@ -66,7 +66,7 @@ export function HeroSection() {
         
         <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-10 md:mb-12">
           <div className="text-center group cursor-pointer rounded-2xl px-5 py-4 bg-white/5 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.03)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-green-400/30">
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">5000+</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-300">10,000+</div>
             <div className="text-xs sm:text-sm text-gray-300 group-hover:text-gray-200 transition-colors">Charging Stations</div>
           </div>
           <div className="text-center group cursor-pointer rounded-2xl px-5 py-4 bg-white/5 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.03)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/30">

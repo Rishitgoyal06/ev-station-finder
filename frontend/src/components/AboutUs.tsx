@@ -30,9 +30,9 @@ const cards = [
 ];
 
 const stats = [
-  { value: "5000+", label: "Charging stations" },
+  { value: "10,000+", label: "Charging stations" },
   { value: "24/7", label: "Live availability" },
-  { value: "40+", label: "Indian languages" },
+  { value: "10+", label: "Indian languages" },
   { value: "99.9%", label: "Routing confidence" },
 ];
 

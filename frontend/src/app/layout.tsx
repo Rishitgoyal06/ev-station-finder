@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Charge IQ - India's Largest EV Charging Network",
-  description: "Discover India's largest EV charging network with real-time availability, intelligent routing, and 5000+ charging stations. Power your electric vehicle journey with confidence.",
+  description: "Discover India's largest EV charging network with real-time availability, intelligent routing, and 10,000+ charging stations. Power your electric vehicle journey with confidence.",
   keywords: "EV charging, electric vehicle, charging stations, India, real-time availability, EV network, electric car charging",
   authors: [{ name: "EV Station Finder Team" }],
   robots: "index, follow",
   openGraph: {
     title: "EV Station Finder - India's Largest EV Charging Network",
-    description: "Find and navigate to 5000+ EV charging stations across India with real-time availability updates.",
+    description: "Find and navigate to 10,000+ EV charging stations across India with real-time availability updates.",
     type: "website",
     locale: "en_IN",
   },

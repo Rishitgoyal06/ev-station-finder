@@ -1,8 +1,23 @@
 "use client";
+import { useEffect, useState } from "react";
 import { CLIENT_BACKEND_URL } from "@/lib/backend";
 
 // Map rendering is handled by the ev-backend static/index.html Leaflet app
 export function LiveMap() {
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setCoords({ lat: coords.latitude, lng: coords.longitude }),
+      () => {/* permission denied or unavailable — keep null, Leaflet uses its own default */}
+    );
+  }, []);
+
+  const mapSrc = coords
+    ? `${CLIENT_BACKEND_URL}/?embed=1&lat=${coords.lat}&lng=${coords.lng}&v=${Date.now()}`
+    : `${CLIENT_BACKEND_URL}/?embed=1&v=${Date.now()}`;
+
   return (
     <section className="bg-black relative overflow-hidden py-16 sm:py-20">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(6,182,212,0.10),transparent_22%)]" />
@@ -27,7 +42,8 @@ export function LiveMap() {
           <div className="lg:col-span-8">
             <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_0_60px_rgba(0,0,0,0.35)] overflow-hidden">
               <iframe
-                src={`${CLIENT_BACKEND_URL}/?embed=1&v=${Date.now()}`}
+                key={mapSrc}
+                src={mapSrc}
                 title="Live EV stations map"
                 className="w-full h-[300px] sm:h-[350px] md:h-[400px] border-0"
                 allow="geolocation"

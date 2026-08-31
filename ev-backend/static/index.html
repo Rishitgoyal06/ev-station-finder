@@ -657,8 +657,26 @@
                 const stationName = params.get('station') || 'EV Charging Station';
 
                 if (![originLat, originLng, destLat, destLng].every(Number.isFinite)) {
-                    // Embedded map on landing page: immediately show a bustling EV area (Delhi)
-                    // so it looks good without prompting the user for location.
+                    // No full route params — check if at least user location was provided
+                    if (Number.isFinite(originLat) && Number.isFinite(originLng)) {
+                        // Dashboard embed: centre on user's real location
+                        this.userLocation = { lat: originLat, lng: originLng };
+                        this.map.setView([originLat, originLng], 13);
+                        this.updateUserMarker();
+                        this.showLoading();
+                        fetch(`/ev-stations?lat=${originLat}&lng=${originLng}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if (!data.error) {
+                                    this.currentResults = data.results || [];
+                                    this.displayStations(this.currentResults);
+                                }
+                            })
+                            .catch(err => console.error("Error fetching embedded stations:", err))
+                            .finally(() => this.hideLoading());
+                        return;
+                    }
+                    // No location at all: fall back to Delhi as default display
                     this.userLocation = { lat: 28.6139, lng: 77.2090 };
                     this.map.setView([this.userLocation.lat, this.userLocation.lng], 12);
                     

@@ -69,6 +69,7 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stationsList, setStationsList] = useState<NormalizedStation[]>([]);
   const [isStationsLoading, setIsStationsLoading] = useState(true);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [summary, setSummary] = useState<{
     totalBookings: number;
     activeBookings: number;
@@ -104,11 +105,13 @@ export default function DashboardPage() {
 
     if (!navigator.geolocation) { 
       setLocation("Vadodara"); 
+      setUserCoords({ lat: 22.3072, lng: 73.1812 });
       fetchStations(22.3072, 73.1812);
       return; 
     }
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
+        setUserCoords({ lat: coords.latitude, lng: coords.longitude });
         fetchStations(coords.latitude, coords.longitude);
         try {
           const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`);
@@ -118,6 +121,7 @@ export default function DashboardPage() {
       },
       () => {
         setLocation("Vadodara");
+        setUserCoords({ lat: 22.3072, lng: 73.1812 });
         fetchStations(22.3072, 73.1812);
       }
     );
@@ -376,7 +380,7 @@ export default function DashboardPage() {
           {/* ── Map ── */}
           <div className="bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden relative">
             <div className="h-[200px] sm:h-[260px]">
-              <DashboardMap />
+              <DashboardMap lat={userCoords?.lat} lng={userCoords?.lng} />
             </div>
           </div>
 

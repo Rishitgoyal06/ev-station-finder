@@ -95,13 +95,13 @@ def ev_chat(message, language="en"):
         try:
             client = Groq(api_key=api_key)
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-120b",
                 messages=[
                     {"role": "system", "content": get_system_prompt(language)},
                     {"role": "user", "content": message}
                 ],
                 temperature=0.2,
-                max_tokens=300
+                max_tokens=500
             )
             return response.choices[0].message.content
         except Exception as e:

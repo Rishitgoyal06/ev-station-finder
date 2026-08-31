@@ -190,7 +190,6 @@ export default function AboutSection() {
                     <img src={member.image} alt={member.name} className="h-14 w-14 rounded-full object-cover ring-2 ring-emerald-400/40" />
                     <div>
                       <div className="font-semibold">{member.name}</div>
-                      <div className="text-sm text-slate-400">{member.role}</div>
                     </div>
                   </div>
                 </div>

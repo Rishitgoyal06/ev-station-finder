@@ -16,6 +16,8 @@ import {
   IconCalendar,
   IconUsersGroup,
   IconChartAreaLine,
+  IconPlus,
+  IconClockHour4,
 } from "@tabler/icons-react";
 import { fetchStationsCached } from "@/lib/stations";
 
@@ -55,6 +57,21 @@ export default function OwnerDashboard() {
   const [isLoadingBookings, setIsLoadingBookings] = useState(false);
   const [bookingSearch, setBookingSearch] = useState("");
   const [bookingStatusFilter, setBookingStatusFilter] = useState("all");
+
+  // Toast notification
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 4500);
+  };
+
+  // Register Station form state
+  const [regForm, setRegForm] = useState({ name: "", address: "", chargingType: "AC Charging (Slow)", ports: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // My station requests (owner view)
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [isLoadingMyRequests, setIsLoadingMyRequests] = useState(false);
 
   const canAccessOwner = user?.role === "owner" || user?.role === "admin";
 
@@ -108,6 +125,17 @@ export default function OwnerDashboard() {
       .finally(() => setIsLoadingBookings(false));
   }, [isAuthenticated]);
 
+  // Fetch owner's own station requests when "my-requests" tab is active
+  useEffect(() => {
+    if (!isAuthenticated || activeTab !== "my-requests" || !user?.email) return;
+    setIsLoadingMyRequests(true);
+    fetch(`/api/admin/station-requests?owner_email=${encodeURIComponent(user.email)}`)
+      .then((r) => r.json())
+      .then((d) => setMyRequests(d.requests || []))
+      .catch(() => setMyRequests([]))
+      .finally(() => setIsLoadingMyRequests(false));
+  }, [isAuthenticated, activeTab, user?.email]);
+
   if (isAuthLoading) {
     return (
       <div className="flex h-screen bg-[#0a0a0a] items-center justify-center">
@@ -133,6 +161,8 @@ export default function OwnerDashboard() {
   const tabs = [
     { key: "overview", label: "Overview", icon: IconChartBar },
     { key: "stations", label: "Nearby Stations", icon: IconChargingPile },
+    { key: "register", label: "Register Station", icon: IconPlus },
+    { key: "my-requests", label: "My Requests", icon: IconClockHour4 },
     { key: "bookings", label: "Bookings", icon: IconCalendarEvent },
     { key: "workers", label: "Workers", icon: IconUsers },
     { key: "analytics", label: "Analytics", icon: IconTrendingUp },
@@ -284,7 +314,7 @@ export default function OwnerDashboard() {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { label: "Register Station", sub: "Add your EV station", icon: IconChargingPile, color: "green", action: () => setActiveTab("stations") },
+                { label: "Register Station", sub: "Add your EV station", icon: IconPlus, color: "green", action: () => setActiveTab("register") },
                 { label: "Manage Workers", sub: "Add team members", icon: IconUsersGroup, color: "blue", action: () => setActiveTab("workers") },
                 { label: "View Analytics", sub: "Performance insights", icon: IconChartAreaLine, color: "purple", action: () => setActiveTab("analytics") },
               ].map((a) => (
@@ -371,9 +401,210 @@ export default function OwnerDashboard() {
           </div>
         )}
 
+        {/* ── Register Station Tab ──────────────────────────────────── */}
+        {activeTab === "register" && (
+          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6 max-w-2xl mx-auto">
+            <div className="flex items-center gap-3 mb-1">
+              <IconPlus size={22} className="text-green-400" stroke={2} />
+              <h3 className="text-xl font-bold">Register New EV Station</h3>
+            </div>
+            <p className="text-sm text-gray-400 mb-6 ml-9">Submit your station for review. Our admin team will verify and activate it shortly.</p>
+
+            <form
+              className="space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!regForm.name || !regForm.address || !regForm.ports) return;
+                setIsSubmitting(true);
+                try {
+                  const res = await fetch("/api/admin/station-requests", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      station_name: regForm.name,
+                      address: regForm.address,
+                      charging_type: regForm.chargingType,
+                      total_ports: parseInt(regForm.ports),
+                      owner_name: user?.name,
+                      owner_email: user?.email,
+                    }),
+                  });
+                  if (res.ok) {
+                    showToast("success", "✅ Station request submitted! Admin will review and activate it shortly.");
+                    setRegForm({ name: "", address: "", chargingType: "AC Charging (Slow)", ports: "" });
+                    setTimeout(() => setActiveTab("my-requests"), 1500);
+                  } else {
+                    showToast("error", "❌ Submission failed. Please try again.");
+                  }
+                } catch {
+                  showToast("error", "❌ Network error. Please check your connection.");
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+            >
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-300">Station Name *</label>
+                <input
+                  required type="text"
+                  value={regForm.name}
+                  onChange={(e) => setRegForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g., ChargeZone x TATA.ev"
+                  className="w-full bg-[#161616] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-300">Complete Address *</label>
+                <textarea
+                  required
+                  value={regForm.address}
+                  onChange={(e) => setRegForm(f => ({ ...f, address: e.target.value }))}
+                  placeholder="Enter full address including city and pin code"
+                  className="w-full bg-[#161616] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors min-h-[80px] resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-300">Charging Type</label>
+                  <select
+                    value={regForm.chargingType}
+                    onChange={(e) => setRegForm(f => ({ ...f, chargingType: e.target.value }))}
+                    className="w-full bg-[#161616] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-green-500 transition-colors"
+                  >
+                    <option>AC Charging (Slow)</option>
+                    <option>DC Fast Charging</option>
+                    <option>Ultra-Fast DC</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-gray-300">Total Ports *</label>
+                  <input
+                    required type="number" min="1" max="50"
+                    value={regForm.ports}
+                    onChange={(e) => setRegForm(f => ({ ...f, ports: e.target.value }))}
+                    placeholder="e.g., 4"
+                    className="w-full bg-[#161616] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[#1a1a1a]">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 bg-green-500 hover:bg-green-400 disabled:bg-green-800 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <><span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> Submitting...</>
+                  ) : "Submit for Review"}
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-2">Your request will appear in the Admin panel for approval</p>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ── My Requests Tab ───────────────────────────────────────── */}
+        {activeTab === "my-requests" && (
+          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold">My Station Requests</h3>
+                <p className="text-sm text-gray-400 mt-0.5">Track the approval status of your submitted stations.</p>
+              </div>
+              <button
+                onClick={() => setActiveTab("register")}
+                className="flex items-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-green-400 text-black text-sm font-semibold rounded-lg transition-colors"
+              >
+                <IconPlus size={14} stroke={2.5} /> New Request
+              </button>
+            </div>
+
+            {isLoadingMyRequests ? (
+              <div className="animate-pulse space-y-3">
+                {[1, 2, 3].map(i => <div key={i} className="h-20 bg-[#1f1f1f] rounded-xl" />)}
+              </div>
+            ) : myRequests.length === 0 ? (
+              <div className="text-center py-16 text-gray-500">
+                <IconClockHour4 size={44} className="mx-auto mb-3 text-gray-400" stroke={1.5} />
+                <p className="font-medium text-white">No requests submitted yet</p>
+                <p className="text-sm mt-1 mb-4">Submit a station registration request and track its status here.</p>
+                <button
+                  onClick={() => setActiveTab("register")}
+                  className="px-5 py-2.5 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-lg text-sm transition-colors"
+                >
+                  Register a Station →
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myRequests.map((req) => (
+                  <div key={req.id} className={`p-4 rounded-xl border ${
+                    req.status === "approved" ? "bg-green-500/5 border-green-500/20" :
+                    req.status === "rejected" ? "bg-red-500/5 border-red-500/20" :
+                    "bg-[#161616] border-[#2a2a2a]"
+                  }`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-white">{req.station_name}</p>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            req.status === "pending"  ? "bg-yellow-500/20 text-yellow-400" :
+                            req.status === "approved" ? "bg-green-500/20 text-green-400" :
+                            "bg-red-500/20 text-red-400"
+                          }`}>
+                            {req.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 mb-2">{req.address}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>⚡ {req.charging_type}</span>
+                          <span>🔌 {req.total_ports} ports</span>
+                          <span>📅 {new Date(req.submitted_at).toLocaleDateString()}</span>
+                          {req.reviewed_at && (
+                            <span>✅ Reviewed {new Date(req.reviewed_at).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                      {/* Status icon */}
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                        req.status === "approved" ? "bg-green-500/20" :
+                        req.status === "rejected" ? "bg-red-500/20" :
+                        "bg-yellow-500/20"
+                      }`}>
+                        {req.status === "approved" && <span className="text-green-400 text-lg">✓</span>}
+                        {req.status === "rejected" && <span className="text-red-400 text-lg">✕</span>}
+                        {req.status === "pending"  && <span className="text-yellow-400 text-lg">⏳</span>}
+                      </div>
+                    </div>
+
+                    {/* Status message */}
+                    {req.status === "approved" && (
+                      <div className="mt-3 pt-3 border-t border-green-500/20 text-xs text-green-400">
+                        🎉 Your station has been approved! It will appear on the ChargeIQ map shortly.
+                      </div>
+                    )}
+                    {req.status === "rejected" && (
+                      <div className="mt-3 pt-3 border-t border-red-500/20 text-xs text-red-400">
+                        Your request was not approved. Please contact support or submit a new request with updated details.
+                      </div>
+                    )}
+                    {req.status === "pending" && (
+                      <div className="mt-3 pt-3 border-t border-yellow-500/10 text-xs text-yellow-400/70">
+                        Under review by the admin team. You'll see the status update here once reviewed.
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Bookings Tab ──────────────────────────────────────────── */}
-        {activeTab === "bookings" && (
-          <div className="space-y-4">
+        {activeTab === "bookings" && (          <div className="space-y-4">
             {/* Stats strip */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
@@ -547,6 +778,21 @@ export default function OwnerDashboard() {
           </div>
         )}
       </div>
+
+      {/* ── UI Toast Notification ──────────────────────────────────── */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-medium transition-all animate-in slide-in-from-bottom-4 duration-300 ${
+            toast.type === "success"
+              ? "bg-[#111] border-green-500/40 text-green-300"
+              : "bg-[#111] border-red-500/40 text-red-300"
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${toast.type === "success" ? "bg-green-400 animate-pulse" : "bg-red-400"}`} />
+          {toast.message}
+          <button onClick={() => setToast(null)} className="ml-2 text-gray-500 hover:text-white transition-colors text-lg leading-none">&times;</button>
+        </div>
+      )}
     </div>
   );
 }

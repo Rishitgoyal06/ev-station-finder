@@ -11,6 +11,9 @@ import {
   IconCash,
   IconChartBar,
   IconCreditCard,
+  IconCheck,
+  IconX,
+  IconClockHour4,
 } from "@tabler/icons-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -71,6 +74,20 @@ export default function AdminDashboard() {
   const [isLoadingBookings, setIsLoadingBookings] = useState(false);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+
+  // Station registration requests
+  const [stationRequests, setStationRequests] = useState<any[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+
+  // User detail modal
+  const [selectedUser, setSelectedUser] = useState<RegisteredUser | null>(null);
+
+  // Admin toast
+  const [adminToast, setAdminToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const showAdminToast = (type: "success" | "error", message: string) => {
+    setAdminToast({ type, message });
+    setTimeout(() => setAdminToast(null), 4000);
+  };
 
   // Auth guard — only admins
   useEffect(() => {
@@ -133,6 +150,14 @@ export default function AdminDashboard() {
         .catch(() => setAllBookings([]))
         .finally(() => setIsLoadingBookings(false));
     }
+    if (activeTab === "requests") {
+      setIsLoadingRequests(true);
+      fetch("/api/admin/station-requests")
+        .then((r) => r.json())
+        .then((d) => setStationRequests(d.requests || []))
+        .catch(() => setStationRequests([]))
+        .finally(() => setIsLoadingRequests(false));
+    }
   }, [activeTab]);
 
   if (isAuthLoading) {
@@ -167,6 +192,7 @@ export default function AdminDashboard() {
     { key: "overview", label: "Overview", icon: IconChartBar },
     { key: "users", label: "Users", icon: IconUsers },
     { key: "stations", label: "Stations", icon: IconChargingPile },
+    { key: "requests", label: "Station Requests", icon: IconClockHour4 },
     { key: "owners", label: "Owners", icon: IconBuildingStore },
     { key: "bookings", label: "Bookings", icon: IconCalendarEvent },
     { key: "payments", label: "Payments", icon: IconCreditCard },
@@ -384,7 +410,7 @@ export default function AdminDashboard() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <button className="px-3 py-1 text-xs bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg transition-colors">View</button>
+                            <button onClick={() => setSelectedUser(u)} className="px-3 py-1 text-xs bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg transition-colors">View</button>
                             <button className="px-3 py-1 text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-colors">Suspend</button>
                           </div>
                         </td>
@@ -416,7 +442,105 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* ── Station Requests Tab ──────────────────────────────────────── */}
+        {activeTab === "requests" && (
+          <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-bold">Station Registration Requests</h3>
+                <p className="text-sm text-gray-400 mt-0.5">Review and approve/reject requests from station owners.</p>
+              </div>
+              <span className="flex items-center gap-1.5 text-xs">
+                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                <span className="text-yellow-400">{stationRequests.filter(r => r.status === "pending").length} pending</span>
+              </span>
+            </div>
+
+            {isLoadingRequests ? (
+              <div className="animate-pulse space-y-3">
+                {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[#1f1f1f] rounded-lg" />)}
+              </div>
+            ) : stationRequests.length === 0 ? (
+              <div className="text-center py-16 text-gray-500">
+                <IconClockHour4 size={44} className="mx-auto mb-3 text-gray-400" stroke={1.5} />
+                <p className="font-medium text-white">No station requests yet</p>
+                <p className="text-sm mt-1">Station owners can submit registration requests from their Owner Portal.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stationRequests.map((req) => (
+                  <div key={req.id} className="p-4 bg-[#161616] border border-[#2a2a2a] rounded-xl">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-white truncate">{req.station_name}</p>
+                          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            req.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                            req.status === "approved" ? "bg-green-500/20 text-green-400" :
+                            "bg-red-500/20 text-red-400"
+                          }`}>
+                            {req.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400">{req.address}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          <span>⚡ {req.charging_type}</span>
+                          <span>🔌 {req.total_ports} ports</span>
+                          {req.owner_name && <span>👤 {req.owner_name}</span>}
+                          {req.owner_email && <span>✉ {req.owner_email}</span>}
+                        </div>
+                        <p className="text-[10px] text-gray-600 mt-1">{new Date(req.submitted_at).toLocaleString()}</p>
+                      </div>
+                      {req.status === "pending" && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={async () => {
+                              const res = await fetch(`/api/admin/station-requests/${req.id}`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status: "approved" }),
+                              });
+                              if (res.ok) {
+                                setStationRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "approved" } : r));
+                                showAdminToast("success", `✅ "${req.station_name}" approved!`);
+                              } else {
+                                showAdminToast("error", "Failed to update status.");
+                              }
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <IconCheck size={13} stroke={2.5} /> Approve
+                          </button>
+                          <button
+                            onClick={async () => {
+                              const res = await fetch(`/api/admin/station-requests/${req.id}`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ status: "rejected" }),
+                              });
+                              if (res.ok) {
+                                setStationRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "rejected" } : r));
+                                showAdminToast("success", `Rejected "${req.station_name}"`);
+                              } else {
+                                showAdminToast("error", "Failed to update status.");
+                              }
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <IconX size={13} stroke={2.5} /> Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Owners Tab ────────────────────────────────────────────── */}
+
         {activeTab === "owners" && (
           <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
             <h3 className="text-lg font-bold mb-5">Station Owners</h3>
@@ -445,7 +569,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-400">Owner</span>
-                      <button className="px-3 py-1 text-xs bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg transition-colors">View</button>
+                      <button onClick={() => setSelectedUser(u)} className="px-3 py-1 text-xs bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg transition-colors">View</button>
                     </div>
                   </div>
                 ))}
@@ -557,6 +681,89 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Admin Toast */}
+      {adminToast && (
+        <div
+          className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-medium ${
+            adminToast.type === "success"
+              ? "bg-[#111] border-green-500/40 text-green-300"
+              : "bg-[#111] border-red-500/40 text-red-300"
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${adminToast.type === "success" ? "bg-green-400 animate-pulse" : "bg-red-400"}`} />
+          {adminToast.message}
+          <button onClick={() => setAdminToast(null)} className="ml-2 text-gray-500 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+      )}
+
+      {/* User Detail Modal */}
+      {selectedUser && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setSelectedUser(null)}
+        >
+          <div
+            className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold">User Details</h3>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#1f1f1f] hover:bg-[#2a2a2a] text-gray-400 hover:text-white transition-colors text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Avatar + name */}
+            <div className="flex flex-col items-center text-center mb-5">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mb-3 ${
+                selectedUser.role === "admin" ? "bg-red-500/20 text-red-400" :
+                selectedUser.role === "owner" ? "bg-purple-500/20 text-purple-400" :
+                "bg-green-500/20 text-green-400"
+              }`}>
+                {selectedUser.name[0]?.toUpperCase()}
+              </div>
+              <p className="text-lg font-semibold">{selectedUser.name}</p>
+              <span className={`mt-1 px-3 py-0.5 rounded-full text-xs font-medium ${
+                selectedUser.role === "admin" ? "bg-red-500/20 text-red-400" :
+                selectedUser.role === "owner" ? "bg-purple-500/20 text-purple-400" :
+                "bg-green-500/20 text-green-400"
+              }`}>
+                {selectedUser.role}
+              </span>
+            </div>
+
+            {/* Details */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-[#161616] rounded-lg">
+                <span className="text-xs text-gray-400">Email</span>
+                <span className="text-sm font-medium text-white">{selectedUser.email}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-[#161616] rounded-lg">
+                <span className="text-xs text-gray-400">User ID</span>
+                <span className="text-xs font-mono text-gray-300 truncate max-w-[160px]">{selectedUser.id}</span>
+              </div>
+              {selectedUser.createdAt && (
+                <div className="flex items-center justify-between p-3 bg-[#161616] rounded-lg">
+                  <span className="text-xs text-gray-400">Joined</span>
+                  <span className="text-sm text-gray-300">{new Date(selectedUser.createdAt).toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setSelectedUser(null)}
+              className="mt-5 w-full py-2.5 bg-[#1f1f1f] hover:bg-[#2a2a2a] border border-[#2a2a2a] rounded-lg text-sm font-medium transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

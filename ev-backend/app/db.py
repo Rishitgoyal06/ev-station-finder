@@ -3,12 +3,6 @@ import asyncio
 import certifi
 from config import MONGODB_URI
 
-memory_db = {
-    "users": {},
-    "bookings": {},
-    "slots": {}
-}
-
 mongo_client = None
 db = None
 
@@ -26,34 +20,24 @@ def get_db():
             db = mongo_client.get_database("EvStationFinderDatabase")
         except Exception as e:
             print(f"MongoDB init exception: {e}")
+            raise e
+            
+    if db is None:
+        raise Exception("MongoDB URI is not configured or initialization failed.")
+        
     return db
 
 async def get_users_collection():
     database = get_db()
-    if database is not None:
-        try:
-            await mongo_client.admin.command('ping')
-            return ("mongo", database["users"])
-        except Exception as e:
-            print(f"MongoDB ping error (users): {e}")
-    return ("memory", memory_db["users"])
+    await mongo_client.admin.command('ping')
+    return ("mongo", database["users"])
 
 async def get_bookings_collection():
     database = get_db()
-    if database is not None:
-        try:
-            await mongo_client.admin.command('ping')
-            return ("mongo", database["bookings"])
-        except Exception as e:
-            print(f"MongoDB ping error (bookings): {e}")
-    return ("memory", memory_db["bookings"])
+    await mongo_client.admin.command('ping')
+    return ("mongo", database["bookings"])
 
 async def get_slots_collection():
     database = get_db()
-    if database is not None:
-        try:
-            await mongo_client.admin.command('ping')
-            return ("mongo", database["slots"])
-        except Exception as e:
-            print(f"MongoDB ping error (slots): {e}")
-    return ("memory", memory_db["slots"])
+    await mongo_client.admin.command('ping')
+    return ("mongo", database["slots"])

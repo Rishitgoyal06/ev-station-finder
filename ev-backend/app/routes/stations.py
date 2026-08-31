@@ -128,10 +128,16 @@ async def get_ev_stations(
     key = _station_key(lat, lng, radius)
     now = time.time()
 
-    # Note: We can't cache responses with real-time availability
-    # Each request needs fresh booking data
-    
-    data = fetch_nearby(lat, lng, radius)
+    # We cache the raw Google API response to save quota
+    # Real-time availability is dynamically calculated below
+    cached = _STATION_CACHE.get(key)
+    if cached and now - cached[0] < STATION_TTL:
+        data = cached[1]
+    else:
+        data = fetch_nearby(lat, lng, radius)
+        if data.get("status") == "OK":
+            _STATION_CACHE[key] = (now, data)
+
     if data.get("status") != "OK":
         return {"count": 0, "results": []}
 
@@ -159,7 +165,16 @@ async def search_places(
     if not GOOGLE_API_KEY:
         return {"count": 0, "results": []}
 
-    data = fetch_text_search(query)
+    now = time.time()
+    
+    cached = _SEARCH_CACHE.get(query)
+    if cached and now - cached[0] < STATION_TTL:
+        data = cached[1]
+    else:
+        data = fetch_text_search(query)
+        if data.get("status") == "OK":
+            _SEARCH_CACHE[query] = (now, data)
+
     if data.get("status") != "OK":
         return {"count": 0, "results": []}
 

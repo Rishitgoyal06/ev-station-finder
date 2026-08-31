@@ -23,6 +23,7 @@ export default function StationsPage() {
   const [subLocation, setSubLocation] = useState("Vadodara, Gujarat");
   const [stationsList, setStationsList] = useState<NormalizedStation[]>([]);
   const [isStationsLoading, setIsStationsLoading] = useState(true);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) router.replace("/");
@@ -43,11 +44,13 @@ export default function StationsPage() {
     };
 
     if (!navigator.geolocation) {
+      setUserCoords({ lat: 22.3072, lng: 73.1812 });
       fetchStations(22.3072, 73.1812);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
+        setUserCoords({ lat: coords.latitude, lng: coords.longitude });
         fetchStations(coords.latitude, coords.longitude);
         try {
           const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`);
@@ -56,7 +59,10 @@ export default function StationsPage() {
           setSubLocation(`${d.address?.city || d.address?.town || ""}, ${d.address?.state || ""}`.trim().replace(/^,|,$/g, ""));
         } catch {}
       },
-      () => fetchStations(22.3072, 73.1812)
+      () => {
+        setUserCoords({ lat: 22.3072, lng: 73.1812 });
+        fetchStations(22.3072, 73.1812);
+      }
     );
   }, []);
 
@@ -199,7 +205,7 @@ export default function StationsPage() {
             </div>
             {/* Map */}
             <div className="bg-[#111] border border-[#1a1a1a] rounded-xl overflow-hidden relative" style={{ minHeight: 200 }}>
-              <div className="h-[200px] lg:h-full min-h-[200px]"><StationsMap /></div>
+              <div className="h-[200px] lg:h-full min-h-[200px]"><StationsMap lat={userCoords?.lat} lng={userCoords?.lng} /></div>
               {/* Legend */}
               <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2 border border-[#2a2a2a] space-y-1">
                 {[["#22c55e","Available"],["#f59e0b","Busy"],["#ef4444","Unavailable"]].map(([c,l]) => (

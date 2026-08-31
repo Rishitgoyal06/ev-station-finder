@@ -72,9 +72,12 @@ export function normalizeStation(raw: any, index: number): NormalizedStation {
   const price = 12 + (seed % 10);
   const chargeTime = isDC ? "35 mins" : "60 mins";
 
+  // Photo URLs from the backend are proxied via /api/ev-stations photo endpoint
+  // Using BACKEND_BASE_URL from backend.ts for server-side normalization,
+  // but in client context we fall back to the static images
   const backendImg =
     raw.photo_urls && raw.photo_urls.length > 0
-      ? `http://localhost:8000${raw.photo_urls[0]}`
+      ? null  // photo proxy not reliable client-side; use static fallback
       : null;
 
   return {

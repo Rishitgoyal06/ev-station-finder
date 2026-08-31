@@ -395,7 +395,7 @@ export default function Features() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <button
-              onClick={() => window.open("http://localhost:8001", "_blank")}
+              onClick={() => window.open("/stations", "_self")}
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-300 px-8 py-4 font-bold text-black transition-transform hover:scale-[1.02]"
             >
               Find Charging Stations

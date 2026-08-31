@@ -1,12 +1,5 @@
-from fastapi import APIRouter, Query
-from fastapi.responses import JSONResponse, StreamingResponse
-from app.services.google_places import fetch_photo
-
-router = APIRouter()
-
-
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from app.services.google_places import fetch_photo
 
 router = APIRouter()
@@ -14,13 +7,15 @@ router = APIRouter()
 
 @router.get("/")
 def read_index(request: Request, embed: str = None):
-    """Serve map interface if embed parameter is present, otherwise return API info"""
+    """Serve the Leaflet map app when ?embed=1, otherwise return API info."""
     if embed is not None:
-        # Serve the map interface for embed mode
-        return FileResponse('static/index.html')
-    else:
-        # Return API information
-        return JSONResponse({"service": "Charge IQ EV Backend", "docs": "/docs", "health": "/health"})
+        return FileResponse("static/index.html")
+    return JSONResponse({
+        "service": "Charge IQ EV Backend",
+        "docs": "/docs",
+        "health": "/health",
+        "map": "/?embed=1",
+    })
 
 
 @router.get("/health")

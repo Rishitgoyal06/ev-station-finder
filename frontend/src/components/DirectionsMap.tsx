@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useMemo } from "react";
-import { BACKEND_BASE_URL } from "@/lib/backend";
+import { useMemo, useEffect } from "react";
+import { CLIENT_BACKEND_URL } from "@/lib/backend";
 
 interface DirectionsMapProps {
   userLocation: [number, number];
@@ -9,12 +9,14 @@ interface DirectionsMapProps {
   onRouteCalculated?: (routeInfo: { distance: string; duration: string; traffic: string }) => void;
 }
 
+// Map rendering and routing is handled by the ev-backend Leaflet app
 export default function DirectionsMap({
   userLocation,
   stationLocation,
   stationName,
   onRouteCalculated,
 }: DirectionsMapProps) {
+  // Straight-line distance for the info panel
   const distanceKm = useMemo(() => {
     const toRad = (v: number) => (v * Math.PI) / 180;
     const R = 6371;
@@ -37,7 +39,8 @@ export default function DirectionsMap({
     });
   }, [distanceKm, onRouteCalculated]);
 
-  const backendMapUrl = useMemo(() => {
+  // Build the iframe URL with all params the backend Leaflet app expects
+  const mapUrl = useMemo(() => {
     const params = new URLSearchParams({
       lat: String(userLocation[0]),
       lng: String(userLocation[1]),
@@ -46,18 +49,20 @@ export default function DirectionsMap({
       station: stationName,
       embed: "1",
     });
-    return `${BACKEND_BASE_URL}/static/index.html?${params.toString()}`;
-  }, [stationLocation, stationName, userLocation]);
+    return `${CLIENT_BACKEND_URL}/?${params.toString()}`;
+  }, [userLocation, stationLocation, stationName]);
 
   return (
-    <div className="relative w-full h-full min-h-[560px] rounded-2xl overflow-hidden border border-[#1a1a1a] bg-[#070707]">
+    <div className="relative w-full h-full min-h-[360px] rounded-2xl overflow-hidden border border-[#1a1a1a] bg-[#070707]">
       <iframe
-        title="EV station map"
-        src={backendMapUrl}
-        className="absolute inset-0 block w-full h-full border-0"
+        title="EV station directions map"
+        src={mapUrl}
+        className="absolute inset-0 w-full h-full border-0"
+        allow="geolocation"
       />
 
-      <div className="absolute top-4 left-4 right-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pointer-events-none">
+      {/* Info overlay */}
+      <div className="absolute top-4 left-4 right-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pointer-events-none z-[1000]">
         <div className="bg-black/75 backdrop-blur-sm border border-[#1f1f1f] rounded-xl px-4 py-3 max-w-[65%]">
           <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Destination</p>
           <p className="text-sm font-semibold text-white truncate">{stationName}</p>
@@ -66,9 +71,9 @@ export default function DirectionsMap({
           </p>
         </div>
         <div className="bg-black/75 backdrop-blur-sm border border-[#1f1f1f] rounded-xl px-4 py-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Route</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Distance</p>
           <p className="text-sm font-semibold text-green-400">{distanceKm.toFixed(1)} km</p>
-          <p className="text-xs text-gray-400">Loading backend map</p>
+          <p className="text-xs text-gray-400">straight-line</p>
         </div>
       </div>
     </div>

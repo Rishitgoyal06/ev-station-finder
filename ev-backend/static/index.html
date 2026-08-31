@@ -657,7 +657,24 @@
                 const stationName = params.get('station') || 'EV Charging Station';
 
                 if (![originLat, originLng, destLat, destLng].every(Number.isFinite)) {
-                    this.map.setView([20.5937, 78.9629], 5);
+                    // Embedded map on landing page: immediately show a bustling EV area (Delhi)
+                    // so it looks good without prompting the user for location.
+                    this.userLocation = { lat: 28.6139, lng: 77.2090 };
+                    this.map.setView([this.userLocation.lat, this.userLocation.lng], 12);
+                    
+                    // Fetch stations around this location
+                    this.showLoading();
+                    fetch(`/ev-stations?lat=${this.userLocation.lat}&lng=${this.userLocation.lng}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.error) {
+                                this.currentResults = data.results || [];
+                                this.displayStations(this.currentResults);
+                            }
+                        })
+                        .catch(err => console.error("Error fetching embedded stations:", err))
+                        .finally(() => this.hideLoading());
+                    
                     return;
                 }
 

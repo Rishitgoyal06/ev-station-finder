@@ -13,8 +13,17 @@ def fetch_nearby(lat: float, lng: float, radius: int) -> dict:
     return response.json()
 
 
-def fetch_text_search(query: str) -> dict:
+def fetch_text_search(query: str, lat: float = None, lng: float = None, radius: int = 30000, page_token: str = None) -> dict:
     params = {"query": query, "key": GOOGLE_API_KEY}
+    
+    # Pass user coordinates and radius to bias search results locally
+    if lat is not None and lng is not None:
+        params["location"] = f"{lat},{lng}"
+        params["radius"] = radius
+    
+    if page_token:
+        params["pagetoken"] = page_token
+    
     response = requests.get(TEXT_SEARCH_URL, params=params, timeout=10)
     return response.json()
 

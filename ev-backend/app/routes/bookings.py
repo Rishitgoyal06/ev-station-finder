@@ -15,6 +15,8 @@ class BookingCreateSchema(BaseModel):
     stationPlaceId: Optional[str] = None
     stationName: str
     address: Optional[str] = "Station Location"
+    latitude: Optional[float] = None  # Added for directions functionality
+    longitude: Optional[float] = None  # Added for directions functionality
     date: Optional[str] = None
     time: Optional[str] = None
     connector: Optional[str] = "CCS2"
@@ -219,6 +221,8 @@ async def create_booking(
         "stationPlaceId": station_place_id,
         "stationName": data.stationName,
         "address": data.address or "Station Location",
+        "latitude": data.latitude,  # Include station coordinates for directions
+        "longitude": data.longitude,  # Include station coordinates for directions
         "date": booking_date,
         "time": booking_time,
         "connector": data.connector or "CCS2",

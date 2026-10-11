@@ -53,6 +53,18 @@ export default function BookingDetailsPage() {
     }
   };
 
+  const handleGetDirections = () => {
+    if (booking.latitude && booking.longitude) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${booking.latitude},${booking.longitude}`;
+      window.open(url, "_blank");
+    } else {
+      // Fallback to searching by station name and address
+      const query = encodeURIComponent(`${booking.stationName} ${booking.address}`);
+      const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      window.open(url, "_blank");
+    }
+  };
+
   const handleContactSupport = () => {
     const subject = encodeURIComponent(`Support Request — Booking ${booking.id}`);
     const body = encodeURIComponent(
@@ -212,7 +224,10 @@ export default function BookingDetailsPage() {
                     {booking.address}
                   </p>
                   <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg text-sm font-medium transition-colors hover:bg-blue-500/20">
+                    <button
+                      onClick={handleGetDirections}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg text-sm font-medium transition-colors hover:bg-blue-500/20"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path d="M9 11H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2M9 11V9a2 2 0 1 1 4 0v2M9 11h6"/>
                       </svg>

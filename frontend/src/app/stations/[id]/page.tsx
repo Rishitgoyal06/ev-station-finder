@@ -614,6 +614,8 @@ function StationDetailContent() {
                       address: `${stationAddr}${
                         stationCity ? ", " + stationCity : ""
                       }`,
+                      latitude: stationData?.latitude,  // Include station coordinates
+                      longitude: stationData?.longitude,  // Include station coordinates
                       date: bookingDate,
                       time,
                       connector: selectedConnector?.name || connectorNames[0],

@@ -160,24 +160,35 @@ async def get_ev_stations(
 @router.get("/search", response_model=StationsResponse)
 async def search_places(
     query: str = Query(...),
-    lat: float = Query(None),
-    lng: float = Query(None),
+    lat: float = Query(None, ge=-90.0, le=90.0),
+    lng: float = Query(None, ge=-180.0, le=180.0),
+    radius: int = Query(30000, ge=100, le=50000),  # Added radius parameter
+    page_token: str = Query(None),
 ):
     if not GOOGLE_API_KEY:
-        return {"count": 0, "results": []}
+        return {"error": "Google Maps API key is missing on backend. Set GOOGLE_MAPS_API_KEY in .env file.", "count": 0, "results": [], "next_page_token": None}
 
-    now = time.time()
+    clean_q = query.strip()
+    clean_q_lower = clean_q.lower()
     
-    cached = _SEARCH_CACHE.get(query)
-    if cached and now - cached[0] < STATION_TTL:
-        data = cached[1]
+    if clean_q_lower in ("ev charging station near me", "ev charger near me", "ev near me", "chargers near me", "near me", "charger near me"):
+        if lat is not None and lng is not None:
+            return await get_ev_stations(lat=lat, lng=lng, radius=radius)
+        else:
+            full_query = "EV charging station"
     else:
-        data = fetch_text_search(query)
-        if data.get("status") == "OK":
-            _SEARCH_CACHE[query] = (now, data)
+        if not any(kw in clean_q_lower for kw in ["ev", "charger", "charging", "ather", "tata", "jio", "zeon", "statiq", "plug"]):
+            full_query = f"EV charging station near {clean_q}"
+        else:
+            full_query = clean_q
 
-    if data.get("status") != "OK":
-        return {"count": 0, "results": []}
+    # PASS lat, lng, and radius to fetch_text_search below:
+    data = fetch_text_search(full_query, lat=lat, lng=lng, radius=radius, page_token=page_token)
+    
+    status = data.get("status")
+    if status not in ("OK", "ZERO_RESULTS"):
+        err_msg = data.get("error_message") or status
+        return {"error": f"Google Places API error: {status} ({err_msg})", "count": 0, "results": [], "next_page_token": None}
 
     results = []
     for place in data.get("results", []):
@@ -187,8 +198,7 @@ async def search_places(
         if enriched:
             results.append(enriched)
 
-    response = {"count": len(results), "results": results}
-    return response
+    return {"count": len(results), "results": results, "next_page_token": data.get("next_page_token")}
 
 
 @router.get("/navigate")

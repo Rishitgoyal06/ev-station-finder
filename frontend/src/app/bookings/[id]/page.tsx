@@ -17,6 +17,7 @@ export default function BookingDetailsPage() {
       case "confirmed": return "text-green-400 bg-green-500/10 border-green-500/20";
       case "completed": return "text-blue-400 bg-blue-500/10 border-blue-500/20";
       case "cancelled": return "text-red-400 bg-red-500/10 border-red-500/20";
+      case "expired": return "text-orange-400 bg-orange-500/10 border-orange-500/20";
       default: return "text-gray-400 bg-gray-500/10 border-gray-500/20";
     }
   };

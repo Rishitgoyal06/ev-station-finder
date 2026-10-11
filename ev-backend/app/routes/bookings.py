@@ -10,6 +10,89 @@ from app.db import get_bookings_collection, get_slots_collection
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
 
 
+def _is_booking_expired(booking_date: str, booking_time: str) -> bool:
+    """Check if a booking's date and time has passed"""
+    try:
+        # Parse booking datetime
+        booking_datetime_str = f"{booking_date} {booking_time}"
+        booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%Y-%m-%d %H:%M")
+        
+        # Get current datetime
+        now = datetime.datetime.now()
+        
+        # Add grace period of 2 hours after booking time before marking as expired
+        grace_period = datetime.timedelta(hours=2)
+        return now > (booking_datetime + grace_period)
+    except ValueError:
+        # If parsing fails, assume not expired to be safe
+        return False
+
+
+def _should_mark_completed(booking_date: str, booking_time: str) -> bool:
+    """Check if a booking should be marked as completed (1+ hours after booking time)"""
+    try:
+        booking_datetime_str = f"{booking_date} {booking_time}"
+        booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%Y-%m-%d %H:%M")
+        
+        now = datetime.datetime.now()
+        
+        # Mark as completed 1 hour after booking time
+        completion_threshold = datetime.timedelta(hours=1)
+        return now > (booking_datetime + completion_threshold)
+    except ValueError:
+        return False
+
+
+async def _update_expired_bookings(mode, collection):
+    """Automatically update status of expired bookings"""
+    if mode == "mongo":
+        # Get all confirmed bookings
+        cursor = collection.find({"status": "confirmed"})
+        bookings = await cursor.to_list(length=1000)
+        
+        for booking in bookings:
+            booking_date = booking.get("date", "")
+            booking_time = booking.get("time", "")
+            
+            if _should_mark_completed(booking_date, booking_time):
+                # Mark as completed if 1+ hours past booking time
+                await collection.update_one(
+                    {"id": booking["id"]}, 
+                    {"$set": {"status": "completed"}}
+                )
+                # Free up the slot
+                slot_number = booking.get("slotNumber")
+                if slot_number:
+                    await _set_slot_status(str(slot_number), "available")
+            elif _is_booking_expired(booking_date, booking_time):
+                # Mark as expired/cancelled if 2+ hours past booking time with no completion
+                await collection.update_one(
+                    {"id": booking["id"]}, 
+                    {"$set": {"status": "expired"}}
+                )
+                # Free up the slot
+                slot_number = booking.get("slotNumber")
+                if slot_number:
+                    await _set_slot_status(str(slot_number), "available")
+    else:
+        # In-memory storage
+        for booking_id, booking in list(collection.items()):
+            if booking.get("status") == "confirmed":
+                booking_date = booking.get("date", "")
+                booking_time = booking.get("time", "")
+                
+                if _should_mark_completed(booking_date, booking_time):
+                    booking["status"] = "completed"
+                    slot_number = booking.get("slotNumber")
+                    if slot_number:
+                        await _set_slot_status(str(slot_number), "available")
+                elif _is_booking_expired(booking_date, booking_time):
+                    booking["status"] = "expired"
+                    slot_number = booking.get("slotNumber")
+                    if slot_number:
+                        await _set_slot_status(str(slot_number), "available")
+
+
 class BookingCreateSchema(BaseModel):
     stationId: Optional[str] = None
     stationPlaceId: Optional[str] = None
@@ -142,6 +225,9 @@ async def get_bookings(
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     mode, collection = await get_bookings_collection()
+    
+    # Update expired bookings before returning results
+    await _update_expired_bookings(mode, collection)
 
     if mode == "mongo":
         cursor = collection.find({"userId": user_id})
@@ -165,6 +251,9 @@ async def get_booking_by_id(
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     mode, collection = await get_bookings_collection()
+    
+    # Update expired bookings before returning results
+    await _update_expired_bookings(mode, collection)
 
     booking = None
     if mode == "mongo":
@@ -288,3 +377,11 @@ async def cancel_booking(
         await _set_slot_status(str(slot_number), "available")
 
     return {"ok": True, "booking": booking}
+
+
+@router.post("/admin/update-expired")
+async def update_all_expired_bookings():
+    """Admin endpoint to manually update all expired bookings"""
+    mode, collection = await get_bookings_collection()
+    await _update_expired_bookings(mode, collection)
+    return {"ok": True, "message": "Expired bookings updated successfully"}

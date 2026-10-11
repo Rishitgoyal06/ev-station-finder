@@ -11,7 +11,7 @@ type Booking = {
   time: string;
   connector: string;
   amount: number;
-  status: "confirmed" | "completed" | "cancelled";
+  status: "confirmed" | "completed" | "cancelled" | "expired";
 };
 
 export default function MyBookingsPage() {
@@ -59,6 +59,7 @@ export default function MyBookingsPage() {
     if (activeTab === "upcoming") return b.status === "confirmed";
     if (activeTab === "completed") return b.status === "completed";
     if (activeTab === "cancelled") return b.status === "cancelled";
+    if (activeTab === "expired") return b.status === "expired";
     return true;
   });
 
@@ -67,6 +68,7 @@ export default function MyBookingsPage() {
       case "confirmed": return "text-green-400 bg-green-500/10 border-green-500/20";
       case "completed": return "text-blue-400 bg-blue-500/10 border-blue-500/20";
       case "cancelled": return "text-red-400 bg-red-500/10 border-red-500/20";
+      case "expired": return "text-orange-400 bg-orange-500/10 border-orange-500/20";
       default: return "text-gray-400 bg-gray-500/10 border-gray-500/20";
     }
   };
@@ -142,6 +144,7 @@ export default function MyBookingsPage() {
             { key: "upcoming", label: "Upcoming" },
             { key: "completed", label: "Completed" },
             { key: "cancelled", label: "Cancelled" },
+            { key: "expired", label: "Expired" },
           ].map((tab) => (
             <button
               key={tab.key}

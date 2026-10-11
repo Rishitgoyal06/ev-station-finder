@@ -1,12 +1,128 @@
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
 import jwt
+import datetime
 from config import JWT_SECRET
 from app.db import get_users_collection, get_bookings_collection, get_slots_collection
 
 router = APIRouter(tags=["Admin & Summary"])
 
 PRIVILEGED_ROLES = {"admin", "owner", "worker"}
+
+
+async def _set_slot_status(slot_id: str, status: str):
+    mode, slots = await get_slots_collection()
+    if mode == "mongo":
+        slot = await slots.find_one({"id": slot_id})
+        if slot:
+            await slots.update_one({"id": slot_id}, {"$set": {"status": status}})
+        else:
+            await slots.insert_one({
+                "id": slot_id,
+                "stationId": "1",
+                "name": f"Slot {slot_id}",
+                "status": status,
+                "type": "CCS2",
+                "power": "150 kW"
+            })
+    else:
+        slots[slot_id] = slots.get(slot_id, {
+            "id": slot_id,
+            "stationId": "1",
+            "name": f"Slot {slot_id}",
+            "type": "CCS2",
+            "power": "150 kW"
+        })
+        slots[slot_id]["status"] = status
+
+
+def _is_booking_expired(booking_date: str, booking_time: str) -> bool:
+    """Check if a booking's date and time has passed"""
+    try:
+        # Parse booking datetime - handle both 12-hour and 24-hour formats
+        booking_datetime_str = f"{booking_date} {booking_time}"
+        try:
+            booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%Y-%m-%d %I:%M %p")
+        except ValueError:
+            booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%Y-%m-%d %H:%M")
+        
+        # Get current datetime
+        now = datetime.datetime.now()
+        
+        # Add grace period of 2 hours after booking time before marking as expired
+        grace_period = datetime.timedelta(hours=2)
+        return now > (booking_datetime + grace_period)
+    except ValueError:
+        # If parsing fails, assume not expired to be safe
+        return False
+
+
+def _should_mark_completed(booking_date: str, booking_time: str) -> bool:
+    """Check if a booking should be marked as completed (1+ hours after booking time)"""
+    try:
+        booking_datetime_str = f"{booking_date} {booking_time}"
+        try:
+            booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%Y-%m-%d %I:%M %p")
+        except ValueError:
+            booking_datetime = datetime.datetime.strptime(booking_datetime_str, "%Y-%m-%d %H:%M")
+        
+        now = datetime.datetime.now()
+        
+        # Mark as completed 1 hour after booking time
+        completion_threshold = datetime.timedelta(hours=1)
+        return now > (booking_datetime + completion_threshold)
+    except ValueError:
+        return False
+
+
+async def _update_expired_bookings(mode, collection):
+    """Automatically update status of expired bookings"""
+    if mode == "mongo":
+        # Get all confirmed bookings
+        cursor = collection.find({"status": "confirmed"})
+        bookings = await cursor.to_list(length=1000)
+        
+        for booking in bookings:
+            booking_date = booking.get("date", "")
+            booking_time = booking.get("time", "")
+            
+            if _should_mark_completed(booking_date, booking_time):
+                # Mark as completed if 1+ hours past booking time
+                await collection.update_one(
+                    {"id": booking["id"]}, 
+                    {"$set": {"status": "completed"}}
+                )
+                # Free up the slot
+                slot_number = booking.get("slotNumber")
+                if slot_number:
+                    await _set_slot_status(str(slot_number), "available")
+            elif _is_booking_expired(booking_date, booking_time):
+                # Mark as expired/cancelled if 2+ hours past booking time with no completion
+                await collection.update_one(
+                    {"id": booking["id"]}, 
+                    {"$set": {"status": "expired"}}
+                )
+                # Free up the slot
+                slot_number = booking.get("slotNumber")
+                if slot_number:
+                    await _set_slot_status(str(slot_number), "available")
+    else:
+        # In-memory storage
+        for booking_id, booking in list(collection.items()):
+            if booking.get("status") == "confirmed":
+                booking_date = booking.get("date", "")
+                booking_time = booking.get("time", "")
+                
+                if _should_mark_completed(booking_date, booking_time):
+                    booking["status"] = "completed"
+                    slot_number = booking.get("slotNumber")
+                    if slot_number:
+                        await _set_slot_status(str(slot_number), "available")
+                elif _is_booking_expired(booking_date, booking_time):
+                    booking["status"] = "expired"
+                    slot_number = booking.get("slotNumber")
+                    if slot_number:
+                        await _set_slot_status(str(slot_number), "available")
 
 def _require_privileged(authorization: Optional[str], cookie: Optional[str]) -> str:
     """Decode JWT and require admin/owner/worker role. Returns role string."""
@@ -135,6 +251,9 @@ async def get_all_bookings(
     _require_privileged(authorization, cookie)
 
     b_mode, b_coll = await get_bookings_collection()
+    
+    # Update expired bookings before returning results
+    await _update_expired_bookings(b_mode, b_coll)
 
     if b_mode == "mongo":
         cursor = b_coll.find({})
@@ -145,3 +264,17 @@ async def get_all_bookings(
         bookings = list(b_coll.values())
 
     return {"bookings": bookings}
+
+
+@router.post("/admin/update-expired")
+async def update_expired_bookings_admin(
+    authorization: Optional[str] = Header(None),
+    cookie: Optional[str] = Header(None),
+):
+    """Manually trigger update of expired bookings - admin only"""
+    _require_privileged(authorization, cookie)
+    
+    b_mode, b_coll = await get_bookings_collection()
+    await _update_expired_bookings(b_mode, b_coll)
+    
+    return {"ok": True, "message": "Expired bookings updated successfully"}

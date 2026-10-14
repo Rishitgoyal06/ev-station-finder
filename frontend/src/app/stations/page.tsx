@@ -24,44 +24,108 @@ export default function StationsPage() {
   const [stationsList, setStationsList] = useState<NormalizedStation[]>([]);
   const [isStationsLoading, setIsStationsLoading] = useState(true);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
+  const [isLocationUpdating, setIsLocationUpdating] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) router.replace("/");
   }, [isAuthLoading, isAuthenticated, router]);
 
-  useEffect(() => {
-    const fetchStations = async (lat: number, lng: number) => {
-      setIsStationsLoading(true);
-      try {
-        const mapped = await fetchAndNormalizeStations({ lat, lng, radius: 30000 });
-        setStationsList(mapped);
-      } catch (e) {
-        console.error("Failed to fetch UI stations", e);
-        setStationsList([]);
-      } finally {
-        setIsStationsLoading(false);
+  const setLocationFromCoordinates = async (lat: number, lng: number, fallbackName = "Your Location") => {
+    setIsLocationUpdating(true);
+    setLocationError("");
+    setUserCoords({ lat, lng });
+    setIsStationsLoading(true);
+
+    try {
+      const mapped = await fetchAndNormalizeStations({ lat, lng, radius: 30000 });
+      setStationsList(mapped);
+    } catch (error) {
+      console.error("Failed to fetch UI stations", error);
+      setStationsList([]);
+    } finally {
+      setIsStationsLoading(false);
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      );
+      if (!response.ok) throw new Error("Unable to resolve location");
+      const result = await response.json();
+      const address = result.address ?? {};
+      setLocation(address.suburb || address.county || address.city || address.town || fallbackName);
+      setSubLocation(`${address.city || address.town || ""}, ${address.state || ""}`.trim().replace(/^,|,$/g, ""));
+    } catch {
+      setLocation(fallbackName);
+      setSubLocation("");
+    } finally {
+      setIsLocationUpdating(false);
+    }
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Location services are not available in this browser.");
+      return;
+    }
+
+    setIsLocationUpdating(true);
+    setLocationError("");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        void setLocationFromCoordinates(coords.latitude, coords.longitude);
+      },
+      () => {
+        setIsLocationUpdating(false);
+        setLocationError("Location permission was denied. Search for a city instead.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const searchLocation = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = locationQuery.trim();
+    if (!query) return;
+
+    setIsLocationUpdating(true);
+    setLocationError("");
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`
+      );
+      const matches = await response.json();
+      const match = matches[0];
+      if (!match) {
+        setLocationError("No matching location found. Try a more specific city or address.");
+        return;
       }
-    };
+
+      await setLocationFromCoordinates(Number(match.lat), Number(match.lon), match.display_name || query);
+      setIsLocationPickerOpen(false);
+      setLocationQuery("");
+    } catch {
+      setLocationError("Could not search for that location. Please try again.");
+    } finally {
+      setIsLocationUpdating(false);
+    }
+  };
+
+  useEffect(() => {
 
     if (!navigator.geolocation) {
-      setUserCoords({ lat: 22.3072, lng: 73.1812 });
-      fetchStations(22.3072, 73.1812);
+      void setLocationFromCoordinates(22.3072, 73.1812, "Vadodara");
       return;
     }
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
-        setUserCoords({ lat: coords.latitude, lng: coords.longitude });
-        fetchStations(coords.latitude, coords.longitude);
-        try {
-          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`);
-          const d = await r.json();
-          setLocation(d.address?.suburb || d.address?.county || d.address?.city || "Your Location");
-          setSubLocation(`${d.address?.city || d.address?.town || ""}, ${d.address?.state || ""}`.trim().replace(/^,|,$/g, ""));
-        } catch {}
+        await setLocationFromCoordinates(coords.latitude, coords.longitude);
       },
       () => {
-        setUserCoords({ lat: 22.3072, lng: 73.1812 });
-        fetchStations(22.3072, 73.1812);
+        void setLocationFromCoordinates(22.3072, 73.1812, "Vadodara");
       }
     );
   }, []);
@@ -198,7 +262,14 @@ export default function StationsPage() {
                 <p className="text-lg font-bold text-white leading-tight">{location}</p>
                 <p className="text-[#555] text-xs mt-0.5">{subLocation}</p>
               </div>
-              <button className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2a2a2a] text-[#aaa] hover:text-white hover:border-[#444] text-[12px] font-medium transition-colors w-fit">
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationError("");
+                  setIsLocationPickerOpen(true);
+                }}
+                className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg border border-[#2a2a2a] text-[#aaa] hover:text-white hover:border-[#444] text-[12px] font-medium transition-colors w-fit"
+              >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 Change Location
               </button>
@@ -413,6 +484,59 @@ export default function StationsPage() {
 
         </div>
       </div>
+
+      {isLocationPickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close location picker"
+            onClick={() => setIsLocationPickerOpen(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+          />
+          <div role="dialog" aria-modal="true" aria-labelledby="location-picker-title" className="relative z-10 w-full max-w-md rounded-2xl border border-[#2a2a2a] bg-[#111] p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-green-400">Search area</p>
+                <h2 id="location-picker-title" className="mt-1 text-xl font-bold text-white">Change location</h2>
+                <p className="mt-1 text-sm text-[#999]">Find nearby charging stations around a city or address.</p>
+              </div>
+              <button type="button" onClick={() => setIsLocationPickerOpen(false)} className="rounded-lg p-2 text-[#888] hover:bg-white/10 hover:text-white" aria-label="Close">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={isLocationUpdating}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm font-semibold text-green-300 transition-colors hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z" /></svg>
+              {isLocationUpdating ? "Updating location..." : "Use my current location"}
+            </button>
+
+            <div className="my-5 flex items-center gap-3 text-xs text-[#666]"><span className="h-px flex-1 bg-[#2a2a2a]" />OR<span className="h-px flex-1 bg-[#2a2a2a]" /></div>
+
+            <form onSubmit={searchLocation} className="space-y-3">
+              <label htmlFor="location-query" className="text-sm font-medium text-gray-200">City or address</label>
+              <div className="flex gap-2">
+                <input
+                  id="location-query"
+                  value={locationQuery}
+                  onChange={(event) => setLocationQuery(event.target.value)}
+                  placeholder="e.g. Ahmedabad, Gujarat"
+                  className="min-w-0 flex-1 rounded-xl border border-[#333] bg-[#181818] px-3 py-2.5 text-sm text-white placeholder:text-[#666] outline-none transition-colors focus:border-green-500"
+                />
+                <button type="submit" disabled={isLocationUpdating || !locationQuery.trim()} className="rounded-xl bg-green-500 px-4 py-2.5 text-sm font-bold text-black transition-colors hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50">
+                  Search
+                </button>
+              </div>
+            </form>
+
+            {locationError && <p className="mt-3 text-sm text-red-400">{locationError}</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

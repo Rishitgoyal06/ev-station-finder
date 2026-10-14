@@ -77,8 +77,28 @@ function DirectionsContent() {
           dest_lng: String(stationLng),
           route_type: "fastest",
         });
+        
+        // Check if origin and destination are too close (< 50 meters apart)
+        const distance = Math.sqrt(
+          Math.pow((stationLat - userLocation[0]) * 111000, 2) +
+          Math.pow((stationLng - userLocation[1]) * 111000, 2)
+        );
+        
+        if (distance < 50) {
+          // User is already at or very close to the station
+          setRouteData({
+            distance: "< 0.1 km",
+            duration: "< 1 min",
+            traffic: "You're already here!",
+            routeType: "Walking",
+            benefits: "Already at destination",
+          });
+          return;
+        }
+        
         const res = await fetch(`${BACKEND_BASE_URL}/directions?${params.toString()}`);
         const data = await res.json();
+        
         setRouteData({
           distance: data.distance || "0 km",
           duration: data.duration || "0 min",
@@ -86,7 +106,8 @@ function DirectionsContent() {
           routeType: data.route_type || "Fastest",
           benefits: data.benefits || "",
         });
-      } catch {
+      } catch (error) {
+        console.error("API Error:", error);
         setRouteData({
           distance: "0 km",
           duration: "0 min",

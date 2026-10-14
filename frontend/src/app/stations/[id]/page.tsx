@@ -101,6 +101,7 @@ function StationDetailContent() {
   const [connector, setConnector] = useState(connectors[0]?.id || "");
   const [date, setDate] = useState("Today");
   const [time, setTime] = useState("5:30 PM");
+  const [openPicker, setOpenPicker] = useState<"date" | "time" | null>(null);
   const [imgIdx, setImgIdx] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
@@ -146,6 +147,14 @@ function StationDetailContent() {
 
   useEffect(() => {
     if (!isAuthenticated) router.replace("/");
+
+    // All of today's booking slots have passed. Move to the next available
+    // day so the controlled select always has a visible option.
+    if (date === "Today" && availableTimeSlots.length === 0) {
+      setDate("Tomorrow");
+      return;
+    }
+
     if (
       availableTimeSlots.length > 0 &&
       !availableTimeSlots.includes(time)
@@ -476,25 +485,18 @@ function StationDetailContent() {
 
             {/* Date + Time */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div className="relative">
                 <p className="text-[10px] font-semibold text-[#555] tracking-widest uppercase mb-2">
                   Date
                 </p>
-                <div className="flex items-center justify-between bg-[#161616] border border-[#2a2a2a] rounded-xl px-3 py-2.5">
-                  <select
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="bg-[#161616] text-white text-[13px] font-medium flex-1 focus:outline-none appearance-none cursor-pointer"
-                    style={{
-                      background: "#161616",
-                      color: "white",
-                      colorScheme: "dark",
-                    }}
-                  >
-                    <option value="Today">Today</option>
-                    <option value="Tomorrow">Tomorrow</option>
-                    <option value="Day After">Day After</option>
-                  </select>
+                <button
+                  type="button"
+                  onClick={() => setOpenPicker(openPicker === "date" ? null : "date")}
+                  aria-haspopup="listbox"
+                  aria-expanded={openPicker === "date"}
+                  className="w-full flex items-center justify-between bg-[#161616] border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-xl px-3 py-2.5 text-white text-[13px] font-medium transition-colors"
+                >
+                  <span>{date}</span>
                   <svg
                     className="w-4 h-4 text-[#555] flex-shrink-0"
                     fill="none"
@@ -507,29 +509,43 @@ function StationDetailContent() {
                     <line x1="8" y1="2" x2="8" y2="6" />
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
-                </div>
+                </button>
+                {openPicker === "date" && (
+                  <div role="listbox" aria-label="Booking date" className="absolute z-30 top-full mt-2 w-full rounded-xl border border-[#2a2a2a] bg-[#181818] p-1.5 shadow-2xl">
+                    {["Today", "Tomorrow", "Day After"].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        role="option"
+                        aria-selected={date === option}
+                        onClick={() => {
+                          setDate(option);
+                          setOpenPicker(null);
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-colors ${
+                          date === option
+                            ? "bg-green-500 text-black"
+                            : "text-gray-200 hover:bg-[#292929]"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div>
+              <div className="relative">
                 <p className="text-[10px] font-semibold text-[#555] tracking-widest uppercase mb-2">
                   Arrival Time
                 </p>
-                <div className="flex items-center justify-between bg-[#161616] border border-[#2a2a2a] rounded-xl px-3 py-2.5">
-                  <select
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    className="bg-[#161616] text-white text-[13px] font-medium flex-1 focus:outline-none appearance-none cursor-pointer"
-                    style={{
-                      background: "#161616",
-                      color: "white",
-                      colorScheme: "dark",
-                    }}
-                  >
-                    {availableTimeSlots.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+                <button
+                  type="button"
+                  onClick={() => setOpenPicker(openPicker === "time" ? null : "time")}
+                  aria-haspopup="listbox"
+                  aria-expanded={openPicker === "time"}
+                  className="w-full flex items-center justify-between bg-[#161616] border border-[#2a2a2a] hover:border-[#3a3a3a] rounded-xl px-3 py-2.5 text-white text-[13px] font-medium transition-colors"
+                >
+                  <span>{time}</span>
                   <svg
                     className="w-4 h-4 text-[#555] flex-shrink-0"
                     fill="none"
@@ -540,7 +556,32 @@ function StationDetailContent() {
                     <circle cx="12" cy="12" r="9" />
                     <path d="M12 7v5l3 3" />
                   </svg>
-                </div>
+                </button>
+                {openPicker === "time" && (
+                  <div role="listbox" aria-label="Arrival time" className="absolute z-30 top-full mt-2 w-full max-h-64 overflow-y-auto rounded-xl border border-[#2a2a2a] bg-[#181818] p-1.5 shadow-2xl">
+                    <div className="grid grid-cols-2 gap-1">
+                      {availableTimeSlots.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          role="option"
+                          aria-selected={time === option}
+                          onClick={() => {
+                            setTime(option);
+                            setOpenPicker(null);
+                          }}
+                          className={`rounded-lg px-2 py-2 text-left text-[12px] font-medium transition-colors ${
+                            time === option
+                              ? "bg-green-500 text-black"
+                              : "text-gray-200 hover:bg-[#292929]"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

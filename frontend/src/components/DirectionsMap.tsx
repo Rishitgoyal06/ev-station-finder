@@ -1,12 +1,11 @@
 "use client";
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { CLIENT_BACKEND_URL } from "@/lib/backend";
 
 interface DirectionsMapProps {
   userLocation: [number, number];
   stationLocation: [number, number];
   stationName: string;
-  onRouteCalculated?: (routeInfo: { distance: string; duration: string; traffic: string }) => void;
 }
 
 // Map rendering and routing is handled by the ev-backend Leaflet app
@@ -14,31 +13,7 @@ export default function DirectionsMap({
   userLocation,
   stationLocation,
   stationName,
-  onRouteCalculated,
 }: DirectionsMapProps) {
-  // Straight-line distance for the info panel
-  const distanceKm = useMemo(() => {
-    const toRad = (v: number) => (v * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(stationLocation[0] - userLocation[0]);
-    const dLng = toRad(stationLocation[1] - userLocation[1]);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(userLocation[0])) *
-        Math.cos(toRad(stationLocation[0])) *
-        Math.sin(dLng / 2) ** 2;
-    return 2 * R * Math.asin(Math.sqrt(a));
-  }, [stationLocation, userLocation]);
-
-  useEffect(() => {
-    const durationMin = Math.max(5, Math.round(distanceKm * 2.5));
-    onRouteCalculated?.({
-      distance: `${distanceKm.toFixed(1)} km`,
-      duration: `${durationMin} min`,
-      traffic: distanceKm > 20 ? "Moderate traffic" : "Light traffic",
-    });
-  }, [distanceKm, onRouteCalculated]);
-
   // Build the iframe URL with all params the backend Leaflet app expects
   const mapUrl = useMemo(() => {
     const params = new URLSearchParams({
@@ -69,11 +44,6 @@ export default function DirectionsMap({
           <p className="text-xs text-gray-400">
             {stationLocation[0].toFixed(4)}, {stationLocation[1].toFixed(4)}
           </p>
-        </div>
-        <div className="bg-black/75 backdrop-blur-sm border border-[#1f1f1f] rounded-xl px-4 py-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Distance</p>
-          <p className="text-sm font-semibold text-green-400">{distanceKm.toFixed(1)} km</p>
-          <p className="text-xs text-gray-400">straight-line</p>
         </div>
       </div>
     </div>

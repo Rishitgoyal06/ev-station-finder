@@ -55,7 +55,7 @@ export function PointerHighlight({
       className={cn("relative w-fit", containerClassName)}
       ref={containerRef}
     >
-      {children}
+      <div className="relative z-10">{children}</div>
       {dimensions.width > 0 && dimensions.height > 0 && (
         <motion.div
           className="pointer-events-none absolute inset-0 z-0"

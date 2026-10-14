@@ -27,7 +27,25 @@ def get_simple_route(origin_lat, origin_lng, dest_lat, dest_lng, route_type) -> 
     points = [[origin_lat, origin_lng], [dest_lat, dest_lng]]
     distance_m = calculate_distance(origin_lat, origin_lng, dest_lat, dest_lng)
     distance_km = distance_m / 1000
-    duration_min = int(distance_km / 40 * 60 * SPEED_MULTIPLIER.get(route_type, 1.0))
+    
+    # Handle case where user is already at destination (within 50 meters)
+    if distance_m < 50:
+        return {
+            "distance": "< 0.1 km",
+            "duration": "< 1 min",
+            "route_type": "Walking",
+            "benefits": "You're already at the destination!",
+            "start_address": f"{origin_lat:.4f}, {origin_lng:.4f}",
+            "end_address": f"{dest_lat:.4f}, {dest_lng:.4f}",
+            "route_points": points,
+            "steps": [{
+                "instruction": "You have arrived at your destination",
+                "distance": "< 0.1 km",
+                "duration": "< 1 min",
+            }],
+        }
+    
+    duration_min = max(1, int(distance_km / 40 * 60 * SPEED_MULTIPLIER.get(route_type, 1.0)))
 
     return {
         "distance": f"{distance_km:.1f} km",
@@ -56,6 +74,24 @@ def get_directions(
     if route_type not in VALID_ROUTE_TYPES:
         route_type = "fastest"
 
+    # Check if user is already at destination (within 50 meters)
+    distance_m = calculate_distance(origin_lat, origin_lng, dest_lat, dest_lng)
+    if distance_m < 50:
+        return {
+            "distance": "< 0.1 km",
+            "duration": "< 1 min",
+            "route_type": "Walking",
+            "benefits": "You're already at the destination!",
+            "start_address": f"{origin_lat:.4f}, {origin_lng:.4f}",
+            "end_address": f"{dest_lat:.4f}, {dest_lng:.4f}",
+            "route_points": [[origin_lat, origin_lng], [dest_lat, dest_lng]],
+            "steps": [{
+                "instruction": "You have arrived at your destination",
+                "distance": "< 0.1 km",
+                "duration": "< 1 min",
+            }],
+        }
+
     data = fetch_route(origin_lat, origin_lng, dest_lat, dest_lng, route_type)
     if not data:
         return get_simple_route(origin_lat, origin_lng, dest_lat, dest_lng, route_type)
@@ -68,7 +104,7 @@ def get_directions(
 
     points = [[coord[1], coord[0]] for coord in geometry["coordinates"]]
     distance_km = route["distance"] / 1000
-    duration_min = int(route["duration"] / 60)
+    duration_min = max(1, int(route["duration"] / 60))  # Ensure minimum 1 minute
 
     if route_type == "eco":
         duration_min = int(duration_min * 1.1)
@@ -79,10 +115,11 @@ def get_directions(
     if route.get("legs") and route["legs"][0].get("steps"):
         for step in route["legs"][0]["steps"][:5]:
             maneuver = step.get("maneuver", {})
+            step_duration = max(1, int(step.get('duration', 0) / 60))  # Minimum 1 minute for steps
             steps.append({
                 "instruction": maneuver.get("instruction", "Continue"),
                 "distance": f"{step.get('distance', 0) / 1000:.1f} km",
-                "duration": f"{int(step.get('duration', 0) / 60)} min" if int(step.get('duration', 0) / 60) > 0 else "< 1 min",
+                "duration": f"{step_duration} min",
             })
 
     if not steps:

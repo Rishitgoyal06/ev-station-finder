@@ -140,6 +140,85 @@ def _normalize_booking_slot(value: str | None) -> str:
     return (value or "").strip().lower()
 
 
+def _booking_start_minutes(value: str | None) -> int | None:
+    """Convert a booking time (for example, ``5:30 PM``) to minutes after midnight."""
+    if not value:
+        return None
+
+    # Older bookings may contain a range such as "5:30 PM - 6:15 PM".
+    start = value.split(" - ", 1)[0].strip()
+    for time_format in ("%I:%M %p", "%H:%M", "%H:%M:%S"):
+        try:
+            parsed = datetime.datetime.strptime(start, time_format)
+            return parsed.hour * 60 + parsed.minute
+        except ValueError:
+            continue
+    return None
+
+
+def _booking_duration_minutes(value: str | None) -> int:
+    """Read the charging duration text, defaulting to the standard 45-minute slot."""
+    if value:
+        digits = "".join(char for char in value if char.isdigit())
+        if digits:
+            return max(1, int(digits))
+    return 45
+
+
+def _times_overlap(
+    new_time: str,
+    new_duration: str | None,
+    existing_time: str,
+    existing_duration: str | None,
+) -> bool:
+    new_start = _booking_start_minutes(new_time)
+    existing_start = _booking_start_minutes(existing_time)
+
+    # Preserve protection for legacy or malformed times instead of silently
+    # allowing a duplicate exact time.
+    if new_start is None or existing_start is None:
+        return new_time.strip().lower() == existing_time.strip().lower()
+
+    new_end = new_start + _booking_duration_minutes(new_duration)
+    existing_end = existing_start + _booking_duration_minutes(existing_duration)
+    return new_start < existing_end and existing_start < new_end
+
+
+async def _user_booking_conflicts(
+    collection_mode,
+    collection,
+    user_id: str,
+    date: str,
+    time: str,
+    estimated_charge: str | None,
+) -> bool:
+    """Return whether a user already has an overlapping active booking that day."""
+    if collection_mode == "mongo":
+        cursor = collection.find({
+            "userId": user_id,
+            "date": date,
+            "status": "confirmed",
+        })
+        bookings = await cursor.to_list(length=200)
+    else:
+        bookings = (
+            booking for booking in collection.values()
+            if booking.get("userId") == user_id
+            and booking.get("date") == date
+            and booking.get("status") == "confirmed"
+        )
+
+    return any(
+        _times_overlap(
+            time,
+            estimated_charge,
+            str(booking.get("time") or ""),
+            booking.get("estimatedCharge"),
+        )
+        for booking in bookings
+    )
+
+
 async def _booking_conflicts(
     collection_mode,
     collection,
@@ -293,6 +372,14 @@ async def create_booking(
     slot_number = data.slotNumber or "A1"
     station_id = data.stationId or None
     station_place_id = data.stationPlaceId or None
+
+    if await _user_booking_conflicts(
+        mode, collection, user_id, booking_date, booking_time, data.estimatedCharge
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="You already have a booking that overlaps this time slot"
+        )
 
     if await _booking_conflicts(
         mode, collection, station_id, station_place_id,

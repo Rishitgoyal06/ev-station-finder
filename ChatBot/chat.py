@@ -54,7 +54,7 @@ def huggingface_chat(message, language="en"):
         return None
 def get_system_prompt(language):
     base_instructions = "You are an EV Assistant that helps users find electric vehicle charging stations. You can understand spelling errors and typos in city names and questions. When asked about EV charging stations in any city, provide real information about actual charging networks like Tata Power, Ather Grid, ChargeZone, BSES, etc. Include specific locations, addresses, plot numbers, and charging types. Only answer EV-related questions. DO NOT mention PlugShare, ChargeHub, or other third-party apps. DO NOT include disclaimers about calling ahead or checking websites."
-    formatting = " Always format your responses clearly using numbered lists and bullet points with clear line breaks. Do not use markdown syntax like asterisks (**) for bolding; just use plain text formatting."
+    formatting = " Always format your responses clearly using numbered lists and bullet points with clear line breaks. Do not use markdown syntax like asterisks (**) for bolding; just use plain text formatting. When listing stations, complete every numbered station before ending the response; keep each station concise if needed."
     
     if language == "en":
         return base_instructions + formatting + " Respond in English."
@@ -101,7 +101,11 @@ def ev_chat(message, language="en"):
                     {"role": "user", "content": message}
                 ],
                 temperature=0.2,
-                max_tokens=500
+                # A three-station answer with addresses, connector details, and
+                # operating hours routinely exceeds 500 tokens. Keep enough
+                # space for the final station to finish rather than cutting it
+                # off mid-list.
+                max_tokens=1200
             )
             return response.choices[0].message.content
         except Exception as e:

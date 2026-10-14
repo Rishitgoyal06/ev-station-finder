@@ -122,7 +122,7 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
     <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 w-full max-w-sm sm:max-w-md">
       <div className="bg-slate-900 rounded-2xl shadow-2xl w-full h-[400px] sm:h-[500px] flex flex-col border border-slate-700 mx-4 sm:mx-0">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800 rounded-t-2xl">
+        <div className="flex-none flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800 rounded-t-2xl">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold">🔋</span>
@@ -143,7 +143,7 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
         </div>
 
         {/* Language Selector */}
-        <div className="p-3 border-b border-slate-700 bg-slate-800">
+        <div className="flex-none p-3 border-b border-slate-700 bg-slate-800">
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
@@ -158,7 +158,7 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-4 bg-slate-900">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -191,7 +191,7 @@ export default function ChatbotModal({ onClose }: ChatbotModalProps) {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-slate-700 bg-slate-800 rounded-b-2xl">
+        <div className="flex-none p-4 border-t border-slate-700 bg-slate-800 rounded-b-2xl">
           <div className="flex space-x-2">
             <input
               ref={inputRef}

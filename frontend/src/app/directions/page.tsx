@@ -2,7 +2,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { BACKEND_BASE_URL } from "@/lib/backend";
 
 // Dynamically import map component to avoid SSR issues
 const DirectionsMap = dynamic(() => import("@/components/DirectionsMap"), { ssr: false });
@@ -96,7 +95,12 @@ function DirectionsContent() {
           return;
         }
         
-        const res = await fetch(`${BACKEND_BASE_URL}/directions?${params.toString()}`);
+        // Use the same-origin proxy so route data does not depend on browser CORS
+        // settings or on a public backend URL being embedded in the client build.
+        const res = await fetch(`/api/directions?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error(`Directions request failed (${res.status})`);
+        }
         const data = await res.json();
         
         setRouteData({

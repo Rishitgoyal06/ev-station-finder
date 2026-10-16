@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useAuth } from "@/components/AuthContext";
 import { useRouter } from "next/navigation";
 import { useGoogleLogin } from "@react-oauth/google";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export function SignupForm({
   className,
@@ -34,6 +35,7 @@ export function SignupForm({
   const [role, setRole] = useState<string>("user");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +49,16 @@ export function SignupForm({
       setError("Password must be at least 6 characters long.");
       return;
     }
+    if (!turnstileToken) {
+      setError("Please complete the human verification challenge.");
+      return;
+    }
 
     setLoading(true);
-    const res = await signup(name, email, password, role);
+    const res = await signup(name, email, password, role, turnstileToken);
     setLoading(false);
+    // Token is single-use — always reset after a submission attempt
+    setTurnstileToken(null);
 
     if (res.ok) {
       onSuccess?.();
@@ -200,9 +208,18 @@ export function SignupForm({
               </Field>
 
               <Field>
+                <TurnstileWidget
+                  action="signup"
+                  onToken={setTurnstileToken}
+                  onReset={() => setTurnstileToken(null)}
+                  className="flex justify-center"
+                />
+              </Field>
+
+              <Field>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !turnstileToken}
                   className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold disabled:opacity-60 transition-all duration-200"
                 >
                   {loading ? "Creating Account..." : "Create Account with Email"}

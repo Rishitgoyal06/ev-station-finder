@@ -25,8 +25,8 @@ export interface UserProfile {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: UserProfile | null;
-  login: (emailOrUsername: string, password: string) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
-  signup: (name: string, email: string, password: string, role?: string) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
+  login: (emailOrUsername: string, password: string, turnstileToken: string) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
+  signup: (name: string, email: string, password: string, role?: string, turnstileToken?: string) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
   googleLogin: (credentialData: { credential?: string; userInfo?: any; role?: string }) => Promise<{ ok: boolean; error?: string; user?: UserProfile }>;
   logout: () => void;
   isLoading: boolean;
@@ -87,12 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (emailOrUsername: string, password: string): Promise<{ ok: boolean; error?: string; user?: UserProfile }> => {
+  const login = async (emailOrUsername: string, password: string, turnstileToken: string): Promise<{ ok: boolean; error?: string; user?: UserProfile }> => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailOrUsername, username: emailOrUsername, password }),
+        body: JSON.stringify({
+          email: emailOrUsername,
+          username: emailOrUsername,
+          password,
+          "cf-turnstile-response": turnstileToken,
+        }),
       });
 
       const data = await response.json();
@@ -113,13 +118,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: string,
     email: string,
     password: string,
-    role: string = "user"
+    role: string = "user",
+    turnstileToken?: string
   ): Promise<{ ok: boolean; error?: string; user?: UserProfile }> => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          ...(turnstileToken ? { "cf-turnstile-response": turnstileToken } : {}),
+        }),
       });
 
       const data = await response.json();
